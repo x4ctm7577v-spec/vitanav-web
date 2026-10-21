@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="VitaNav: navegación para barcos de recreo en Florida. Ruta segura que esquiva bajos y rocas, alarma de profundidad, clima por horas y SOS.">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>VitaNav</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+  /* Layout: una noche en Biscayne Bay. Una carta viva de fondo, una ruta naranja que baja por toda la
+     página y 4 paradas del viaje (antes de salir → salida → en el agua → de vuelta). Un solo aspecto:
+     noche náutica (diseño oscuro a propósito). */
+  :root {
+    --noche: #030d1d;        /* fondo */
+    --casco: #0a1a33;        /* superficies */
+    --casco-2: #0f2546;
+    --hilo: rgba(160, 205, 255, 0.13);  /* líneas finas */
+    --texto: #f2f7fc;
+    --niebla: #93abc6;       /* texto secundario */
+    --aqua: #7ff0e6;         /* acento de la app */
+    --ruta: #ff8a2a;         /* la ruta segura */
+    --rojo: #ff5a5f;
+    --amarillo: #fbbf24;
+    --verde: #34d399;
+    --azul: #3b82f6;
+    --f-display: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui, sans-serif;
+    --f-texto: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
+    --f-dato: "JetBrains Mono", ui-monospace, Menlo, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--noche); color: var(--texto); font: 17px/1.6 var(--f-texto); overflow-x: hidden; }
+  .banda { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .ancho { max-width: 1180px; margin: 0 auto; position: relative; }
+  h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; letter-spacing: -0.035em; }
+  p { margin: 0; }
+  .dato { font-family: var(--f-dato); font-variant-numeric: tabular-nums; }
+  .niebla { color: var(--niebla); }
+  .rotulo { font: 700 12px var(--f-dato); letter-spacing: 0.16em; text-transform: uppercase; color: var(--aqua); }
+  a { color: var(--aqua); }
+  :focus-visible { outline: 3px solid var(--aqua); outline-offset: 3px; border-radius: 10px; }
+  body:not(.en) [lang="en"], body.en [lang="es"] { display: none !important; }
+
+  /* ── Barra ── */
+  .barra { position: fixed; top: 0; left: 0; right: 0; z-index: 20; padding-top: env(safe-area-inset-top, 0px); }
+  .barra .ancho { margin-top: 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    background: rgba(3, 13, 29, 0.6); backdrop-filter: blur(14px) saturate(140%); border: 1px solid var(--hilo);
+    border-radius: 999px; padding: 8px 8px 8px 16px; }
+  .marca { display: flex; align-items: center; gap: 10px; font: 800 19px var(--f-display); letter-spacing: -0.03em; }
+  .marca svg { flex: none; }
+  .der { display: flex; align-items: center; gap: 8px; }
+  .idiomas { display: flex; padding: 3px; border-radius: 999px; background: rgba(255,255,255,0.06); }
+  .idiomas button { font: 700 12px var(--f-dato); color: var(--niebla); background: none; border: 0; padding: 7px 11px; border-radius: 999px; cursor: pointer; }
+  .idiomas button[aria-pressed="true"] { background: var(--texto); color: var(--noche); }
+  .pildora { font: 700 14px var(--f-texto); color: var(--noche); background: var(--aqua); text-decoration: none; padding: 9px 16px; border-radius: 999px; white-space: nowrap; }
+
+  /* ── Héroe: carta viva ── */
+  .heroe { position: relative; overflow: hidden; isolation: isolate; }
+  #carta-viva { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
+  .heroe::after { content: ""; position: absolute; inset: 0; z-index: -1;
+    background: radial-gradient(60% 55% at 78% 45%, rgba(127,240,230,0.10), transparent 70%),
+                linear-gradient(180deg, rgba(3,13,29,0.2) 0%, rgba(3,13,29,0) 40%, var(--noche) 100%); }
+  .heroe .ancho { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 40px; align-items: center; padding-block: 140px 90px; }
+  .heroe .texto { display: flex; flex-direction: column; gap: 26px; min-width: 0; }
+  .heroe h1 { font-size: clamp(46px, 8.2vw, 104px); line-height: 0.92; font-weight: 800; }
+  .heroe h1 .naranja { color: var(--ruta); }
+  .heroe h1 .hueco { -webkit-text-stroke: 1.5px var(--texto); color: transparent; }
+  .heroe .bajada { font-size: 19px; color: var(--niebla); max-width: 31em; }
+  .acciones { display: flex; flex-wrap: wrap; gap: 12px; }
+  .boton { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; border-radius: 18px; padding: 14px 22px; font: 800 16px var(--f-texto); border: 1.5px solid transparent; }
+  .boton.claro { background: var(--texto); color: var(--noche); }
+  .boton.claro small, .boton.hilo small { display: block; font: 600 11px var(--f-texto); opacity: 0.65; }
+  .boton.hilo { border-color: var(--hilo); color: var(--texto); background: rgba(255,255,255,0.03); }
+  .posicion { display: flex; flex-wrap: wrap; gap: 8px 18px; font: 500 13px var(--f-dato); color: var(--niebla); }
+  .posicion b { color: var(--texto); font-weight: 700; }
+
+  /* iPhone con la app */
+  .telefono { position: relative; width: min(330px, 100%); aspect-ratio: 9 / 19.2; margin-inline: auto; border-radius: 52px;
+    background: #01060f; padding: 12px; box-shadow: 0 0 0 1.5px rgba(255,255,255,0.14), 0 40px 120px -20px rgba(127,240,230,0.25), 0 30px 60px rgba(0,0,0,0.6);
+    transform: rotate(3deg); }
+  .pantalla { position: relative; width: 100%; height: 100%; border-radius: 41px; overflow: hidden; background: #0b2a4a; }
+  .pantalla svg.mapa { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .isla-dyn { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 34%; height: 26px; background: #000; border-radius: 20px; z-index: 3; }
+  .p-hud { position: absolute; top: 46px; left: 10px; right: 10px; display: grid; grid-template-columns: repeat(3, 1fr); background: rgba(0,0,0,0.82);
+    border: 1px solid rgba(255,90,60,0.35); border-radius: 18px; padding: 8px 2px; text-align: center; z-index: 2; }
+  .p-hud div + div { border-left: 1px solid rgba(255,90,60,0.3); }
+  .p-hud .t { font: 700 8px var(--f-texto); letter-spacing: 0.12em; color: #a5523f; }
+  .p-hud .v { font: 700 22px var(--f-dato); color: #ff6a4a; line-height: 1.15; }
+  .p-hud .v small { font-size: 9px; color: #e3a03a; margin-left: 1px; }
+  .p-aviso { position: absolute; top: 116px; left: 10px; right: 10px; background: #5a0e0e; color: #ffd2c4; border-radius: 14px; padding: 8px 10px; font: 800 12px var(--f-texto); z-index: 2; display: flex; gap: 8px; align-items: center; }
+  .p-detener { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); background: #3a0a0a; color: #ff6a4a; border: 1px solid rgba(255,90,60,0.35); border-radius: 999px; padding: 10px 28px; font: 800 13px var(--f-texto); z-index: 2; }
+
+  /* Cinta de datos */
+  .cinta { border-block: 1px solid var(--hilo); overflow: hidden; background: rgba(255,255,255,0.015); }
+  .cinta .pista { display: flex; gap: 48px; width: max-content; padding-block: 16px; font: 500 14px var(--f-dato); color: var(--niebla); white-space: nowrap; }
+  .cinta .pista span b { color: var(--texto); }
+  .cinta .pista span i { font-style: normal; color: var(--ruta); margin-right: 8px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .cinta .pista { animation: cinta 46s linear infinite; }
+    @keyframes cinta { to { transform: translateX(-50%); } }
+  }
+
+  /* ── Viaje: la ruta que baja por la página ── */
+  .viaje { position: relative; }
+  #espina { position: absolute; top: 0; left: max(16px, env(safe-area-inset-left, 0px)); width: 64px; height: 100%; pointer-events: none; }
+  .parada { position: relative; padding-left: 92px; }
+  .parada .ancho { padding-block: 96px 40px; display: flex; flex-direction: column; gap: 36px; }
+  .wpt { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); top: 96px; width: 64px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .wpt .anillo { width: 30px; height: 30px; border-radius: 50%; border: 4px solid var(--ruta); background: var(--noche); box-shadow: 0 0 0 6px rgba(255,138,42,0.15); }
+  .wpt .num { font: 700 11px var(--f-dato); color: var(--ruta); letter-spacing: 0.08em; }
+  .cabeza { display: flex; flex-direction: column; gap: 12px; max-width: 48em; }
+  .cabeza h2 { font-size: clamp(34px, 5vw, 60px); line-height: 1; font-weight: 800; }
+  .cabeza p { font-size: 18px; color: var(--niebla); max-width: 40em; }
+
+  /* Mosaico de demos */
+  .mosaico { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
+  .pieza { background: linear-gradient(180deg, var(--casco-2), var(--casco)); border: 1px solid var(--hilo); border-radius: 26px; padding: 22px; display: flex; flex-direction: column; gap: 12px; min-width: 0; overflow: hidden; }
+  .pieza h3 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+  .pieza p { color: var(--niebla); font-size: 15.5px; }
+  .a3 { grid-column: span 3; } .a2 { grid-column: span 2; } .a4 { grid-column: span 4; } .a6 { grid-column: span 6; }
+
+  /* demo: pronóstico */
+  .horas { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; align-items: end; height: 110px; }
+  .horas .barra-h { border-radius: 6px 6px 3px 3px; position: relative; }
+  .horas-eje { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; font: 500 10px var(--f-dato); color: var(--niebla); text-align: center; }
+  .ventana { display: inline-flex; align-items: center; gap: 8px; font: 700 13px var(--f-dato); color: var(--verde); background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.35); padding: 6px 12px; border-radius: 999px; align-self: flex-start; }
+
+  /* demo: profundidad */
+  .perfil { position: relative; height: 120px; border-radius: 16px; overflow: hidden; background: rgba(59,130,246,0.12); }
+  .perfil svg { width: 100%; height: 100%; display: block; }
+  .leyenda { display: flex; flex-wrap: wrap; gap: 8px 16px; font: 600 13px var(--f-texto); color: var(--niebla); }
+  .leyenda i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+
+  /* demo: velocímetro */
+  .velo { display: flex; align-items: center; gap: 16px; }
+  .velo .num { font: 700 64px/1 var(--f-dato); color: var(--rojo); letter-spacing: -0.04em; }
+  .velo .num small { font-size: 18px; color: var(--niebla); margin-left: 4px; }
+  .banner-rojo { background: rgba(255,90,95,0.14); border: 1px solid rgba(255,90,95,0.45); color: #ffd0d1; border-radius: 16px; padding: 10px 14px; font: 800 15px var(--f-texto); }
+
+  /* demo: regla y alarma */
+  .regla-demo { position: relative; height: 120px; border-radius: 16px; background: rgba(255,255,255,0.03); border: 1px dashed var(--hilo); }
+  .regla-demo svg { width: 100%; height: 100%; display: block; }
+  .alarma { display: flex; align-items: center; gap: 14px; background: #4a0c0f; border-radius: 18px; padding: 14px; }
+  .alarma .ico { width: 46px; height: 46px; border-radius: 14px; background: var(--rojo); display: grid; place-items: center; flex: none; }
+  .alarma b { display: block; font: 800 17px var(--f-display); }
+  .alarma span { color: #ffc1c3; font-size: 14px; }
+  .lista-mini { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  .lista-mini li { display: flex; gap: 10px; align-items: baseline; font-size: 15.5px; }
+  .lista-mini li .dato { color: var(--aqua); font-size: 13px; flex: none; width: 4.2em; }
+
+  /* Rojo a la derecha */
+  .rrr { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center; }
+  .rrr svg { width: 120px; height: auto; }
+
+  /* Precios */
+  .precios { display: grid; grid-template-columns: 1fr 1.25fr; gap: 14px; }
+  .precio-num { font: 800 clamp(44px, 6vw, 68px)/1 var(--f-display); letter-spacing: -0.04em; }
+  .precio-num small { font: 600 16px var(--f-texto); color: var(--niebla); letter-spacing: 0; margin-left: 6px; }
+  .pieza.premium { background: radial-gradient(120% 120% at 100% 0%, rgba(127,240,230,0.16), transparent 55%), linear-gradient(180deg, var(--casco-2), var(--casco)); border-color: rgba(127,240,230,0.45); }
+  .check { list-style: none; padding: 0; margin: 0; display: grid; gap: 9px; }
+  .check li { display: flex; gap: 10px; font-size: 15.5px; }
+  .check li::before { content: ""; flex: none; width: 18px; height: 18px; margin-top: 3px; border-radius: 50%; background: var(--aqua) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23030d1d' stroke-width='4' stroke-linecap='round'%3E%3Cpath d='M6 12l4 4 8-9'/%3E%3C/svg%3E") center/12px no-repeat; }
+  .gratis .check li::before { background-color: rgba(255,255,255,0.12); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f2f7fc' stroke-width='4' stroke-linecap='round'%3E%3Cpath d='M6 12l4 4 8-9'/%3E%3C/svg%3E"); }
+
+  /* Final */
+  .final { position: relative; overflow: hidden; }
+  .final .ancho { padding-block: 120px; display: flex; flex-direction: column; align-items: flex-start; gap: 26px; }
+  .final h2 { font-size: clamp(48px, 9vw, 120px); line-height: 0.9; font-weight: 800; }
+  .final h2 .naranja { color: var(--ruta); }
+  footer .ancho { border-top: 1px solid var(--hilo); padding-block: 28px; display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: space-between; font-size: 14px; color: var(--niebla); }
+
+  @media (max-width: 900px) {
+    .heroe .ancho { grid-template-columns: 1fr; padding-block: 120px 64px; }
+    .telefono { width: min(290px, 80%); }
+    .mosaico { grid-template-columns: 1fr 1fr; }
+    .a2, .a3, .a4, .a6 { grid-column: span 2; }
+    .precios { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .parada { padding-left: 52px; }
+    #espina, .wpt { width: 36px; }
+    .wpt .anillo { width: 22px; height: 22px; border-width: 3px; }
+    .wpt .num { font-size: 9px; }
+    .pildora { display: none; }
+    .rrr { grid-template-columns: 1fr; }
+  }
+</style>
+
+</head>
+<body>
+<header class="barra banda">
+  <div class="ancho">
+    <div class="marca">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--aqua)" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 15c3-3 13-3 16 0"/><path d="M6 19c2.5-2 9.5-2 12 0"/><path d="M13 4l-2 8M10 7l5 2"/></svg>
+      VitaNav
+    </div>
+    <div class="der">
+      <div class="idiomas" role="group" aria-label="Idioma / Language">
+        <button type="button" id="btn-es" aria-pressed="true">ES</button>
+        <button type="button" id="btn-en" aria-pressed="false">EN</button>
+      </div>
+      <a class="pildora" href="#descargar"><span lang="es">Descargar</span><span lang="en">Download</span></a>
+    </div>
+  </div>
+</header>
+
+<section class="heroe banda">
+  <canvas id="carta-viva" aria-hidden="true"></canvas>
+  <div class="ancho">
+    <div class="texto">
+      <span class="rotulo"><span lang="es">Para barcos de recreo · Florida</span><span lang="en">For recreational boats · Florida</span></span>
+      <h1>
+        <span lang="es">Navega <span class="hueco">sin miedo</span> a <span class="naranja">encallar.</span></span>
+        <span lang="en">Boat <span class="hueco">without fear</span> of <span class="naranja">running aground.</span></span>
+      </h1>
+      <p class="bajada">
+        <span lang="es">VitaNav traza la ruta segura para tu barco, te avisa 2 minutos antes de un bajo o una roca, te dice a qué velocidad ir y te guía con voz. Si estás empezando, es como llevar a un capitán al lado.</span>
+        <span lang="en">VitaNav plans the safe route for your boat, warns you 2 minutes before a shoal or a rock, tells you how fast to go and guides you by voice. If you are new to boating, it is like having a captain beside you.</span>
+      </p>
+      <div class="acciones">
+        <a class="boton claro" href="#descargar">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.8-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.8 1.2 1.8 2.6 3.1 2.5 1.3-.1 1.7-.8 3.3-.8 1.5 0 1.9.8 3.3.8 1.4 0 2.2-1.2 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-4.2zM13.9 5.2c.7-.8 1.1-2 1-3.2-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3.1 1.1.1 2.2-.6 2.9-1.4z"/></svg>
+          <span><small lang="es">Muy pronto</small><small lang="en">Coming soon</small>App Store</span>
+        </a>
+        <a class="boton hilo" href="#viaje"><span><small lang="es">Mira cómo funciona</small><small lang="en">See how it works</small><span lang="es">Un viaje con VitaNav ↓</span><span lang="en">A trip with VitaNav ↓</span></span></a>
+      </div>
+      <div class="posicion">
+        <span><b>25°32′N 080°19′W</b> Black Point</span>
+        <span><span lang="es">Calado</span><span lang="en">Draft</span> <b>3 ft</b> · <span lang="es">margen</span><span lang="en">margin</span> <b>2 ft</b></span>
+      </div>
+    </div>
+
+    <div class="telefono" aria-label="VitaNav navegando de noche por el canal de Black Point" role="img">
+      <div class="pantalla">
+        <div class="isla-dyn"></div>
+        <svg class="mapa" viewBox="0 0 300 640" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <rect width="300" height="640" fill="#071a30"/>
+          <path d="M0 0 H120 C100 90 135 170 95 250 C70 300 95 380 60 440 L0 520 Z" fill="#102a20"/>
+          <path d="M80 250 C120 260 135 300 105 330 C85 350 70 320 76 295 Z" fill="rgba(255,90,95,0.28)"/>
+          <path d="M190 380 C230 370 255 400 238 430 C220 455 180 430 190 380 Z" fill="rgba(255,90,95,0.28)"/>
+          <path d="M175 170 C215 160 240 190 222 215 C205 235 170 220 175 170 Z" fill="rgba(251,191,36,0.2)"/>
+          <g font-family="JetBrains Mono, monospace" font-size="11" fill="#7fa3c7">
+            <text x="200" y="300">9</text><text x="140" y="390">7</text><text x="245" y="270">12</text><text x="210" y="520">11</text>
+            <text x="98" y="300" fill="#ff8080">2</text><text x="215" y="412" fill="#ff8080">3</text>
+          </g>
+          <g><rect x="128" y="150" width="8" height="8" fill="#22c55e"/><polygon points="160,148 165,157 155,157" fill="#ff5a5f"/>
+             <rect x="140" y="215" width="8" height="8" fill="#22c55e"/><polygon points="172,213 177,222 167,222" fill="#ff5a5f"/></g>
+          <circle cx="160" cy="360" r="46" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.2"/>
+          <circle cx="160" cy="360" r="92" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.2"/>
+          <path d="M110 120 C135 160 150 220 158 270 C165 320 150 345 160 360" fill="none" stroke="rgba(150,150,150,0.6)" stroke-width="4" stroke-linecap="round"/>
+          <path d="M160 360 C170 400 160 440 190 480 C210 510 220 560 235 640" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round"/>
+          <path d="M160 360 C170 400 160 440 190 480 C210 510 220 560 235 640" fill="none" stroke="#ff8a2a" stroke-width="8" stroke-linecap="round"/>
+          <circle cx="190" cy="480" r="11" fill="rgba(255,255,255,0.9)" stroke="#00b86b" stroke-width="4"/>
+          <circle cx="160" cy="360" r="17" fill="#fff" stroke="#0b5fb8" stroke-width="3"/>
+          <path d="M160 349 L167 368 L160 364 L153 368 Z" fill="#0b5fb8"/>
+        </svg>
+        <div class="p-hud">
+          <div><div class="t">KN</div><div class="v">3.4</div></div>
+          <div><div class="t">RUMBO</div><div class="v">158°<small>SSE</small></div></div>
+          <div><div class="t">MN</div><div class="v">9.0</div></div>
+        </div>
+        <div class="p-aviso">◔ <span lang="es">Máximo 3 kn en esta zona</span><span lang="en">Max 3 kn in this zone</span></div>
+        <div class="p-detener"><span lang="es">■ Detener</span><span lang="en">■ Stop</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="cinta" aria-hidden="true">
+  <div class="pista">
+    <span><i>●</i>Black Point → Boca Chita <b>9.0 MN</b></span>
+    <span><i>●</i><span lang="es">Canal por balizas</span><span lang="en">Channel by markers</span> <b>13 <span lang="es">puertas</span><span lang="en">gates</span></b></span>
+    <span><i>●</i><span lang="es">Zona de manatíes</span><span lang="en">Manatee zone</span> <b><span lang="es">máx. 3 kn</span><span lang="en">max 3 kn</span></b></span>
+    <span><i>●</i><span lang="es">Marea</span><span lang="en">Tide</span> <b>+1.2 ft ↑</b></span>
+    <span><i>●</i><span lang="es">Viento</span><span lang="en">Wind</span> <b>12 kn NE</b></span>
+    <span><i>●</i><span lang="es">Roca más cercana</span><span lang="en">Nearest rock</span> <b>231 m</b></span>
+    <span><i>●</i><span lang="es">Cartas NOAA en la app</span><span lang="en">NOAA charts in-app</span> <b>170</b></span>
+    <span><i>●</i>Black Point → Boca Chita <b>9.0 MN</b></span>
+    <span><i>●</i><span lang="es">Canal por balizas</span><span lang="en">Channel by markers</span> <b>13 <span lang="es">puertas</span><span lang="en">gates</span></b></span>
+    <span><i>●</i><span lang="es">Zona de manatíes</span><span lang="en">Manatee zone</span> <b><span lang="es">máx. 3 kn</span><span lang="en">max 3 kn</span></b></span>
+    <span><i>●</i><span lang="es">Marea</span><span lang="en">Tide</span> <b>+1.2 ft ↑</b></span>
+    <span><i>●</i><span lang="es">Viento</span><span lang="en">Wind</span> <b>12 kn NE</b></span>
+    <span><i>●</i><span lang="es">Roca más cercana</span><span lang="en">Nearest rock</span> <b>231 m</b></span>
+    <span><i>●</i><span lang="es">Cartas NOAA en la app</span><span lang="en">NOAA charts in-app</span> <b>170</b></span>
+  </div>
+</div>
+
+<main class="viaje" id="viaje">
+  <svg id="espina" aria-hidden="true" preserveAspectRatio="none"></svg>
+
+  <!-- 1. Antes de salir -->
+  <section class="parada banda">
+    <div class="wpt"><span class="anillo"></span><span class="num">WPT 1</span></div>
+    <div class="ancho">
+      <div class="cabeza">
+        <span class="rotulo"><span lang="es">Antes de salir</span><span lang="en">Before you go</span></span>
+        <h2><span lang="es">¿Hoy es buen día? Te lo dice en colores.</span><span lang="en">Is today a good day? It tells you in colors.</span></h2>
+        <p><span lang="es">Pronóstico de 5 días, hora por hora, pensado para TU barco: no es lo mismo una moto de agua que un velero.</span><span lang="en">A 5-day, hour-by-hour forecast made for YOUR boat: a jet ski is not a sailboat.</span></p>
+      </div>
+      <div class="mosaico">
+        <article class="pieza a4">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap">
+            <h3><span lang="es">Viento y olas por horas</span><span lang="en">Wind and waves by the hour</span></h3>
+            <span class="dato niebla" style="font-size:13px">kn · <span lang="es">ráfagas</span><span lang="en">gusts</span></span>
+          </div>
+          <div class="horas" id="horas" aria-hidden="true"></div>
+          <div class="horas-eje dato" aria-hidden="true"><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></div>
+          <span class="ventana">✓ <span lang="es">Mejor hora para salir: 7 – 11 am</span><span lang="en">Best time to go: 7 – 11 am</span></span>
+        </article>
+        <article class="pieza a2">
+          <h3><span lang="es">Mareas</span><span lang="en">Tides</span></h3>
+          <div class="dato" style="font-size:44px; font-weight:700; line-height:1">+1.2<span style="font-size:18px" class="niebla"> ft</span></div>
+          <p><span lang="es">Subiendo. Pleamar a las 2:41 pm. La ruta ya cuenta con la marea más baja del viaje.</span><span lang="en">Rising. High tide at 2:41 pm. The route already uses the lowest tide of your trip.</span></p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. La salida -->
+  <section class="parada banda">
+    <div class="wpt"><span class="anillo"></span><span class="num">WPT 2</span></div>
+    <div class="ancho">
+      <div class="cabeza">
+        <span class="rotulo"><span lang="es">La salida</span><span lang="en">Leaving the dock</span></span>
+        <h2><span lang="es">Una ruta que esquiva lo que no ves.</span><span lang="en">A route around what you can’t see.</span></h2>
+        <p><span lang="es">Marca a dónde vas. En menos de un segundo, VitaNav calcula el camino con las cartas oficiales de NOAA: evita tierra, bajos, rocas y naufragios, pasa lejos de los peligros y te saca de la marina por el centro del canal, de baliza en baliza.</span><span lang="en">Mark where you are going. In under a second, VitaNav plans the way with official NOAA charts: around land, shoals, rocks and wrecks, clear of hazards, and out of the marina down the middle of the channel, marker by marker.</span></p>
+      </div>
+      <div class="mosaico">
+        <article class="pieza a3">
+          <h3><span lang="es">Profundidad según tu calado</span><span lang="en">Depth for your draft</span></h3>
+          <div class="perfil" aria-hidden="true">
+            <svg viewBox="0 0 300 120" preserveAspectRatio="none">
+              <path d="M0 30 C40 30 50 85 90 92 C120 97 130 70 160 64 C200 56 210 104 240 106 C265 108 280 60 300 50 V0 H0 Z" fill="#071a30"/>
+              <line x1="0" y1="80" x2="300" y2="80" stroke="var(--rojo)" stroke-width="2" stroke-dasharray="6 4"/>
+              <rect x="70" y="112" width="45" height="8" fill="var(--rojo)"/><rect x="0" y="112" width="70" height="8" fill="var(--verde)"/>
+              <rect x="115" y="112" width="110" height="8" fill="var(--verde)"/><rect x="225" y="112" width="30" height="8" fill="var(--rojo)"/><rect x="255" y="112" width="45" height="8" fill="var(--verde)"/>
+            </svg>
+          </div>
+          <div class="leyenda"><span><i style="background:var(--azul)"></i><span lang="es">Suficiente</span><span lang="en">Enough</span></span><span><i style="background:var(--amarillo)"></i><span lang="es">Justo</span><span lang="en">Tight</span></span><span><i style="background:var(--rojo)"></i><span lang="es">No cabes</span><span lang="en">Too shallow</span></span></div>
+        </article>
+        <article class="pieza a3">
+          <h3><span lang="es">Rojo a la derecha al volver</span><span lang="en">Red, right, returning</span></h3>
+          <div class="rrr">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+              <rect x="14" y="40" width="22" height="22" fill="var(--verde)"/><rect x="22" y="62" width="6" height="40" fill="var(--niebla)"/>
+              <polygon points="98,36 112,62 84,62" fill="var(--rojo)"/><rect x="95" y="62" width="6" height="40" fill="var(--niebla)"/>
+              <path d="M60 118 V62" stroke="var(--ruta)" stroke-width="6" stroke-linecap="round"/><path d="M60 46 L68 66 L60 61 L52 66 Z" fill="var(--texto)"/>
+            </svg>
+            <p><span lang="es">Al volver del mar a puerto, las balizas rojas van a tu derecha. VitaNav te lleva por el centro, y en Ayuda y consejos te explica lo básico.</span><span lang="en">Coming back in from sea, red markers stay on your right. VitaNav keeps you in the middle, and Help &amp; tips explains the basics.</span></p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. En el agua -->
+  <section class="parada banda">
+    <div class="wpt"><span class="anillo"></span><span class="num">WPT 3</span></div>
+    <div class="ancho">
+      <div class="cabeza">
+        <span class="rotulo"><span lang="es">En el agua</span><span lang="en">On the water</span></span>
+        <h2><span lang="es">Como un GPS, pero para el mar.</span><span lang="en">Like a GPS, but for the sea.</span></h2>
+        <p><span lang="es">Números grandes que se leen al sol, voz que te dice hacia dónde girar y una pantalla que no se apaga. De noche, se pone en rojo para no encandilarte.</span><span lang="en">Big numbers you can read in the sun, a voice that tells you where to turn and a screen that stays on. At night it turns red so it won’t blind you.</span></p>
+      </div>
+      <div class="mosaico">
+        <article class="pieza a2">
+          <h3><span lang="es">A qué velocidad ir</span><span lang="en">How fast to go</span></h3>
+          <div class="velo"><div class="num">5.2<small>kn</small></div></div>
+          <div class="banner-rojo"><span lang="es">¡Baja la velocidad! Máximo 3 kn</span><span lang="en">Slow down! Max 3 kn</span></div>
+          <p><span lang="es">Zonas de manatíes y velocidad mínima de Florida, con el máximo de hoy.</span><span lang="en">Florida manatee and idle-speed zones, with today’s limit.</span></p>
+        </article>
+        <article class="pieza a2">
+          <h3><span lang="es">Alarma de bajos y rocas</span><span lang="en">Shoal and rock alarm</span></h3>
+          <div class="alarma">
+            <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M3 14c3-2 6 2 9 0s6-2 9 0"/><path d="M12 3v7"/></svg></div>
+            <div><b><span lang="es">Agua poco profunda</span><span lang="en">Shallow water</span></b><span lang="es">2 ft · en 45 segundos</span><span lang="en">2 ft · in 45 seconds</span></div>
+          </div>
+          <p><span lang="es">Mira 2 minutos por delante de tu rumbo. Suena, vibra y te habla.</span><span lang="en">Looks 2 minutes ahead of your course. It sounds, vibrates and speaks.</span></p>
+        </article>
+        <article class="pieza a2">
+          <h3><span lang="es">Regla</span><span lang="en">Ruler</span></h3>
+          <div class="regla-demo" aria-hidden="true">
+            <svg viewBox="0 0 220 120">
+              <line x1="30" y1="90" x2="190" y2="30" stroke="#fff" stroke-width="3" stroke-dasharray="7 6"/>
+              <circle cx="30" cy="90" r="7" fill="#fff" stroke="var(--azul)" stroke-width="4"/><circle cx="190" cy="30" r="7" fill="#fff" stroke="var(--azul)" stroke-width="4"/>
+              <text x="110" y="52" font-family="JetBrains Mono, monospace" font-size="13" font-weight="700" fill="var(--texto)">2.40 MN · 058°</text>
+            </svg>
+          </div>
+          <p><span lang="es">Toca dos puntos: millas, rumbo y cuánto tardas.</span><span lang="en">Tap two points: miles, bearing and how long it takes.</span></p>
+        </article>
+        <article class="pieza a6">
+          <h3><span lang="es">Y todo lo que pide un patrón</span><span lang="en">And everything a skipper asks for</span></h3>
+          <ul class="lista-mini" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px 28px">
+            <li><span class="dato">CAPAS</span><span lang="es">Viento, olas y corrientes sobre el mapa</span><span lang="en">Wind, waves and currents on the map</span></li>
+            <li><span class="dato">CARTA</span><span lang="es">Normal, noche, satélite o carta NOAA</span><span lang="en">Default, night, satellite or NOAA chart</span></li>
+            <li><span class="dato">¼ ½ 1</span><span lang="es">Anillos de distancia y línea de proa</span><span lang="en">Range rings and heading line</span></li>
+            <li><span class="dato">AIS</span><span lang="es">Barcos cercanos</span><span lang="en">Nearby boats</span></li>
+            <li><span class="dato">VHF</span><span lang="es">Guía de canales y radio en vivo</span><span lang="en">Channel guide and live radio</span></li>
+            <li><span class="dato">⚓</span><span lang="es">Alarma de ancla</span><span lang="en">Anchor alarm</span></li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. De vuelta -->
+  <section class="parada banda">
+    <div class="wpt"><span class="anillo"></span><span class="num">WPT 4</span></div>
+    <div class="ancho">
+      <div class="cabeza">
+        <span class="rotulo"><span lang="es">De vuelta</span><span lang="en">Heading home</span></span>
+        <h2><span lang="es">Tu día en el agua, guardado solo.</span><span lang="en">Your day on the water, saved automatically.</span></h2>
+        <p><span lang="es">Mientras navegas, VitaNav graba tu recorrido. Con un toque vuelves a la rampa o marina de donde saliste, por agua segura. Y si algo sale mal, el botón SOS siempre está a mano, también gratis.</span><span lang="en">While you navigate, VitaNav records your track. One tap takes you back to the ramp or marina you left from, through safe water. And if something goes wrong, the SOS button is always there, free.</span></p>
+      </div>
+      <div class="mosaico">
+        <article class="pieza a2"><h3><span lang="es">Volver a la salida</span><span lang="en">Return to start</span></h3><p><span lang="es">Recuerda dónde saliste y te guía de vuelta.</span><span lang="en">Remembers where you left from and guides you back.</span></p></article>
+        <article class="pieza a2"><h3><span lang="es">Tus lugares</span><span lang="en">Your places</span></h3><p><span lang="es">Pesca, ancla, gasolina, rampa, buceo, playa. Deja el dedo pulsado en el mapa y guárdalo.</span><span lang="en">Fishing, anchor, fuel, ramp, diving, beach. Press and hold on the map to save it.</span></p></article>
+        <article class="pieza a2"><h3>SOS</h3><p><span lang="es">Llama al 911 y te da tu posición en grados y minutos para leerla por el canal 16.</span><span lang="en">Calls 911 and shows your position in degrees and minutes to read on channel 16.</span></p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Precios -->
+  <section class="parada banda" id="precios">
+    <div class="wpt"><span class="anillo" style="border-color: var(--aqua); box-shadow: 0 0 0 6px rgba(127,240,230,0.15)"></span><span class="num" style="color: var(--aqua)">$</span></div>
+    <div class="ancho">
+      <div class="cabeza">
+        <span class="rotulo"><span lang="es">Precios</span><span lang="en">Pricing</span></span>
+        <h2><span lang="es">Gratis para empezar. Premium para ir seguro.</span><span lang="en">Free to start. Premium to go safely.</span></h2>
+      </div>
+      <div class="precios">
+        <article class="pieza gratis">
+          <h3><span lang="es">Gratis</span><span lang="en">Free</span></h3>
+          <div class="precio-num">$0</div>
+          <ul class="check">
+            <li><span lang="es">Mapa con GPS, velocidad y rumbo</span><span lang="en">Map with GPS, speed and course</span></li>
+            <li><span lang="es">Navegación con voz y viento en el mapa</span><span lang="en">Voice navigation and wind on the map</span></li>
+            <li><span lang="es">Sandbars, marinas, faros y tus lugares</span><span lang="en">Sandbars, marinas, lighthouses and your places</span></li>
+            <li><span lang="es">SOS, alarma de ancla y radio VHF</span><span lang="en">SOS, anchor alarm and VHF radio</span></li>
+          </ul>
+        </article>
+        <article class="pieza premium">
+          <h3>Premium</h3>
+          <div class="precio-num">$49.99<small><span lang="es">/año · o $7.99 al mes</span><span lang="en">/year · or $7.99 a month</span></small></div>
+          <p style="color: var(--aqua); font-weight: 700"><span lang="es">14 días gratis para probarlo todo</span><span lang="en">14 days free to try everything</span></p>
+          <ul class="check">
+            <li><span lang="es">Ruta segura y profundidad por colores</span><span lang="en">Safe route and color-coded depth</span></li>
+            <li><span lang="es">Alarma de bajos y rocas, y avisos de velocidad</span><span lang="en">Shoal and rock alarm, and speed alerts</span></li>
+            <li><span lang="es">Pronóstico de 5 días, mareas, olas y corrientes</span><span lang="en">5-day forecast, tides, waves and currents</span></li>
+            <li><span lang="es">Cartas sin internet, satélite y recorridos</span><span lang="en">Offline charts, satellite and tracks</span></li>
+            <li><span lang="es">Volver a la salida</span><span lang="en">Return to start</span></li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<section class="final banda" id="descargar">
+  <div class="ancho">
+    <span class="rotulo"><span lang="es">Muy pronto en iPhone</span><span lang="en">Coming soon on iPhone</span></span>
+    <h2><span lang="es">Suelta amarras.<br><span class="naranja">Nosotros vigilamos el fondo.</span></span><span lang="en">Cast off.<br><span class="naranja">We’ll watch the bottom.</span></span></h2>
+    <p class="niebla" style="max-width: 36em; font-size: 18px"><span lang="es">VitaNav está en sus últimas pruebas en el agua de Biscayne Bay. Cuando salga en la App Store, este botón te llevará directo a la descarga.</span><span lang="en">VitaNav is in its final on-the-water tests in Biscayne Bay. When it launches on the App Store, this button will take you straight to the download.</span></p>
+    <span class="boton claro" role="img" aria-label="Muy pronto en la App Store / Coming soon on the App Store">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.8-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.8 1.2 1.8 2.6 3.1 2.5 1.3-.1 1.7-.8 3.3-.8 1.5 0 1.9.8 3.3.8 1.4 0 2.2-1.2 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-4.2zM13.9 5.2c.7-.8 1.1-2 1-3.2-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3.1 1.1.1 2.2-.6 2.9-1.4z"/></svg>
+      <span><small lang="es">Muy pronto en la</small><small lang="en">Coming soon on the</small>App Store</span>
+    </span>
+  </div>
+</section>
+
+<footer class="banda">
+  <div class="ancho">
+    <span>© 2026 VitaNav</span>
+    <span lang="es">Ayuda a la navegación: mira siempre el agua, las balizas y las cartas oficiales.</span>
+    <span lang="en">A navigation aid: always watch the water, the markers and official charts.</span>
+    <a href="privacidad.html"><span lang="es">Política de privacidad</span><span lang="en">Privacy policy</span></a>
+  </div>
+</footer>
+
+<script>
+  // ── Idioma (español por defecto; se recuerda si el navegador lo permite) ──
+  const btn = { es: document.getElementById('btn-es'), en: document.getElementById('btn-en') };
+  function idioma(i) {
+    document.body.classList.toggle('en', i === 'en');
+    document.documentElement.lang = i;
+    btn.es.setAttribute('aria-pressed', String(i === 'es'));
+    btn.en.setAttribute('aria-pressed', String(i === 'en'));
+    try { localStorage.setItem('vitanav-idioma', i); } catch (e) { /* sin almacenamiento */ }
+  }
+  btn.es.addEventListener('click', () => idioma('es'));
+  btn.en.addEventListener('click', () => idioma('en'));
+  let guardado = null;
+  try { guardado = localStorage.getItem('vitanav-idioma'); } catch (e) { /* sin almacenamiento */ }
+  idioma(guardado === 'en' || (!guardado && navigator.language && !navigator.language.startsWith('es')) ? 'en' : 'es');
+
+  const sinMovimiento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ── Pronóstico de ejemplo: barras de viento coloreadas para un barco pequeño ──
+  const viento = [9, 8, 9, 10, 12, 13, 15, 17, 19, 18, 16, 14];
+  const horas = document.getElementById('horas');
+  viento.forEach((kn) => {
+    const b = document.createElement('div');
+    b.className = 'barra-h';
+    b.style.height = `${(kn / 20) * 100}%`;
+    b.style.background = kn > 17 ? 'var(--rojo)' : kn >= 13 ? 'var(--amarillo)' : 'var(--verde)';
+    b.title = `${kn} kn`;
+    horas.appendChild(b);
+  });
+
+  // ── Carta viva: líneas de profundidad que se mueven despacio ──
+  const lienzo = document.getElementById('carta-viva');
+  const ctx = lienzo.getContext('2d');
+  let ancho = 0, alto = 0, t = 0;
+  function medir() {
+    const r = lienzo.getBoundingClientRect(), d = Math.min(devicePixelRatio || 1, 2);
+    ancho = r.width; alto = r.height; lienzo.width = ancho * d; lienzo.height = alto * d; ctx.setTransform(d, 0, 0, d, 0, 0);
+  }
+  const centros = [{ x: 0.72, y: 0.42, s: 1 }, { x: 0.2, y: 0.85, s: 0.7 }, { x: 0.95, y: 0.95, s: 0.6 }];
+  function dibujar() {
+    ctx.clearRect(0, 0, ancho, alto);
+    ctx.lineWidth = 1;
+    for (const c of centros) {
+      for (let k = 1; k <= 11; k++) {
+        const base = k * 34 * c.s * Math.max(1, ancho / 1200);
+        ctx.beginPath();
+        for (let a = 0; a <= Math.PI * 2 + 0.01; a += 0.06) {
+          const ruido = Math.sin(a * 3 + t * 0.6 + k) * 8 + Math.sin(a * 5 - t * 0.4 + k * 0.7) * 5 + Math.cos(a * 2 + k) * 10;
+          const r = base + ruido;
+          const x = c.x * ancho + Math.cos(a) * r * 1.35, y = c.y * alto + Math.sin(a) * r;
+          a === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = `rgba(127, 240, 230, ${0.16 - k * 0.011})`;
+        ctx.stroke();
+      }
+    }
+    // números de sonda
+    ctx.font = '500 12px JetBrains Mono, monospace';
+    ctx.fillStyle = 'rgba(147, 171, 198, 0.35)';
+    [[0.08, 0.3, '14'], [0.45, 0.2, '9'], [0.58, 0.75, '6'], [0.33, 0.62, '11'], [0.88, 0.18, '23'], [0.15, 0.55, '8']]
+      .forEach(([x, y, n]) => ctx.fillText(n, x * ancho, y * alto));
+  }
+  function bucle() { t += 0.012; dibujar(); requestAnimationFrame(bucle); }
+  medir(); dibujar();
+  addEventListener('resize', () => { medir(); dibujar(); });
+  if (!sinMovimiento) requestAnimationFrame(bucle);
+
+  // ── La ruta que baja por la página y se dibuja al hacer scroll ──
+  const espina = document.getElementById('espina');
+  const viaje = document.getElementById('viaje');
+  let trazo, total = 0;
+  function construir() {
+    const h = viaje.offsetHeight, w = espina.getBoundingClientRect().width;
+    const m = w / 2;
+    let d = `M${m} 0`;
+    for (let y = 0; y < h; y += 260) d += ` C${m + w * 0.4} ${y + 90}, ${m - w * 0.4} ${y + 170}, ${m} ${Math.min(y + 260, h)}`;
+    espina.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    espina.innerHTML = `<path d="${d}" fill="none" stroke="rgba(255,138,42,0.18)" stroke-width="6" stroke-linecap="round"/>
+      <path id="trazo" d="${d}" fill="none" stroke="var(--ruta)" stroke-width="6" stroke-linecap="round"/>`;
+    trazo = document.getElementById('trazo');
+    total = trazo.getTotalLength();
+    trazo.style.strokeDasharray = `${total}`;
+    avanzar();
+  }
+  function avanzar() {
+    if (!trazo) return;
+    const r = viaje.getBoundingClientRect();
+    const hecho = sinMovimiento ? 1 : Math.min(1, Math.max(0.04, (innerHeight * 0.65 - r.top) / r.height));
+    trazo.style.strokeDashoffset = `${total * (1 - hecho)}`;
+  }
+  construir();
+  addEventListener('resize', construir);
+  addEventListener('scroll', avanzar, { passive: true });
+  document.fonts?.ready.then(construir);
+</script>
+
+</body>
+</html>
