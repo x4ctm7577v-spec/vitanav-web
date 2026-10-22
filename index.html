@@ -15,12 +15,12 @@
      página y 4 paradas del viaje (antes de salir → salida → en el agua → de vuelta). Un solo aspecto:
      noche náutica (diseño oscuro a propósito). */
   :root {
-    --noche: #030d1d;        /* fondo */
-    --casco: #0a1a33;        /* superficies */
-    --casco-2: #0f2546;
-    --hilo: rgba(160, 205, 255, 0.13);  /* líneas finas */
-    --texto: #f2f7fc;
-    --niebla: #93abc6;       /* texto secundario */
+    --noche: #0a3a66;        /* fondo: azul de mar */
+    --casco: #0e4577;        /* superficies */
+    --casco-2: #145394;
+    --hilo: rgba(205, 232, 255, 0.2);  /* líneas finas */
+    --texto: #f5faff;
+    --niebla: #bcd3ea;       /* texto secundario */
     --aqua: #7ff0e6;         /* acento de la app */
     --ruta: #ff8a2a;         /* la ruta segura */
     --rojo: #ff5a5f;
@@ -34,7 +34,7 @@
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
-  body { background: var(--noche); color: var(--texto); font: 17px/1.6 var(--f-texto); overflow-x: hidden; }
+  body { background: var(--noche); background-image: linear-gradient(180deg, #0d5390 0%, var(--noche) 32%, #0a3a66 70%, #08305a 100%); color: var(--texto); font: 17px/1.6 var(--f-texto); overflow-x: hidden; }
   .banda { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   .ancho { max-width: 1180px; margin: 0 auto; position: relative; }
   h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; letter-spacing: -0.035em; }
@@ -49,7 +49,7 @@
   /* ── Barra ── */
   .barra { position: fixed; top: 0; left: 0; right: 0; z-index: 20; padding-top: env(safe-area-inset-top, 0px); }
   .barra .ancho { margin-top: 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px;
-    background: rgba(3, 13, 29, 0.6); backdrop-filter: blur(14px) saturate(140%); border: 1px solid var(--hilo);
+    background: rgba(10, 58, 102, 0.62); backdrop-filter: blur(14px) saturate(140%); border: 1px solid var(--hilo);
     border-radius: 999px; padding: 8px 8px 8px 16px; }
   .marca { display: flex; align-items: center; gap: 10px; font: 800 19px var(--f-display); letter-spacing: -0.03em; }
   .marca svg { flex: none; }
@@ -63,8 +63,9 @@
   .heroe { position: relative; overflow: hidden; isolation: isolate; }
   #carta-viva { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
   .heroe::after { content: ""; position: absolute; inset: 0; z-index: -1;
-    background: radial-gradient(60% 55% at 78% 45%, rgba(127,240,230,0.10), transparent 70%),
-                linear-gradient(180deg, rgba(3,13,29,0.2) 0%, rgba(3,13,29,0) 40%, var(--noche) 100%); }
+    background: radial-gradient(60% 55% at 78% 45%, rgba(127,240,230,0.16), transparent 70%),
+                radial-gradient(50% 40% at 15% 0%, rgba(255,214,150,0.14), transparent 70%),
+                linear-gradient(180deg, rgba(13,83,144,0) 0%, rgba(13,83,144,0) 50%, var(--noche) 100%); }
   .heroe .ancho { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 40px; align-items: center; padding-block: 140px 90px; }
   .heroe .texto { display: flex; flex-direction: column; gap: 26px; min-width: 0; }
   .heroe h1 { font-size: clamp(46px, 8.2vw, 104px); line-height: 0.92; font-weight: 800; }
@@ -174,7 +175,50 @@
   .final h2 .naranja { color: var(--ruta); }
   footer .ancho { border-top: 1px solid var(--hilo); padding-block: 28px; display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: space-between; font-size: 14px; color: var(--niebla); }
 
+  /* ── Demostración animada (como un video) ── */
+  .demo .ancho { padding-block: 96px 40px; display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 48px; align-items: center; }
+  .demo .texto { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+  .demo h2 { font-size: clamp(34px, 5vw, 60px); line-height: 1; font-weight: 800; }
+  .pasos { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; counter-reset: paso; }
+  .pasos button { width: 100%; text-align: left; display: flex; gap: 12px; align-items: baseline; background: none; border: 1px solid transparent; border-radius: 14px; padding: 9px 12px; color: var(--niebla); font: 600 16px var(--f-texto); cursor: pointer; }
+  .pasos button .n { font: 700 12px var(--f-dato); color: var(--niebla); flex: none; width: 1.6em; }
+  .pasos button[aria-current="step"] { background: rgba(255,255,255,0.08); border-color: var(--hilo); color: var(--texto); }
+  .pasos button[aria-current="step"] .n { color: var(--ruta); }
+  .controles { display: flex; align-items: center; gap: 14px; }
+  .play { width: 56px; height: 56px; border-radius: 50%; border: 0; background: var(--ruta); color: #fff; display: grid; place-items: center; cursor: pointer; box-shadow: 0 10px 30px rgba(255,138,42,0.35); }
+  .progreso { flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.15); overflow: hidden; }
+  .progreso i { display: block; height: 100%; width: 0; background: var(--ruta); }
+  .tiempo { font: 600 13px var(--f-dato); color: var(--niebla); min-width: 4.5em; text-align: right; }
+  .marco-demo { position: relative; display: flex; justify-content: center; }
+  .marco-demo .telefono { transform: none; width: min(340px, 100%); }
+  .d-pantalla { background: #cfe5f4; }
+  .d-capa { position: absolute; left: 10px; right: 10px; transition: opacity 0.35s, transform 0.35s; z-index: 2; }
+  .d-hud { top: 46px; display: grid; grid-template-columns: repeat(3, 1fr); background: #fff; border: 1.5px solid rgba(0,0,0,0.12); border-radius: 18px; padding: 8px 2px; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+  .d-hud div + div { border-left: 1.5px solid rgba(0,0,0,0.1); }
+  .d-hud .t { font: 700 8px var(--f-texto); letter-spacing: 0.12em; color: #3a4553; }
+  .d-hud .v { font: 700 22px var(--f-dato); color: #000; line-height: 1.15; }
+  .d-hud .v.rojo { color: #e11d48; }
+  .d-hud .v small { font-size: 9px; color: #0b5fb8; margin-left: 1px; }
+  .d-banner { top: 112px; border-radius: 14px; padding: 9px 12px; font: 800 13px var(--f-texto); background: #fef3c7; color: #000; border: 1.5px solid #f59e0b; }
+  .d-banner.rojo { background: #d90f0f; color: #fff; border-color: #d90f0f; }
+  .d-alerta { top: 0; left: 0; right: 0; padding: 58px 16px 16px; background: #d90f0f; color: #fff; border-radius: 0 0 26px 26px; }
+  .d-alerta b { display: block; font: 800 19px var(--f-display); }
+  .d-alerta span { font: 600 13px var(--f-texto); opacity: 0.9; }
+  .d-alerta .ok { margin-top: 12px; border: 2.5px solid #fff; border-radius: 999px; padding: 8px; text-align: center; font: 800 15px var(--f-texto); transition: background 0.2s; }
+  .d-alerta .ok.pulsado { background: rgba(255,255,255,0.3); }
+  .d-panel { bottom: 12px; background: #0b2240; color: #fff; border-radius: 22px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .d-panel .fila { display: flex; justify-content: space-between; font: 700 12px var(--f-dato); color: #bcd3ea; }
+  .d-boton { border-radius: 14px; padding: 9px; text-align: center; font: 800 13px var(--f-texto); transition: transform 0.2s, box-shadow 0.2s; }
+  .d-boton.segura { border: 1.5px solid #34d399; color: #34d399; background: rgba(52,211,153,0.12); }
+  .d-boton.iniciar { background: #7ff0e6; color: #04132a; }
+  .d-boton.pulsado { transform: scale(0.94); box-shadow: 0 0 0 6px rgba(255,255,255,0.25); }
+  .d-detener { bottom: 16px; left: 50%; right: auto; transform: translateX(-50%); background: #d90f0f; color: #fff; border-radius: 999px; padding: 9px 26px; font: 800 13px var(--f-texto); }
+  .d-toast { top: 46%; text-align: center; background: #fff; color: #04132a; border-radius: 20px; padding: 16px; font: 800 17px var(--f-display); box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
+  .subtitulo { position: absolute; left: 50%; bottom: -18px; transform: translateX(-50%); width: max-content; max-width: 92%; background: rgba(0,0,0,0.75); color: #fff; border-radius: 12px; padding: 8px 14px; font: 700 14px var(--f-texto); text-align: center; z-index: 4; }
+  .oculto { opacity: 0; pointer-events: none; }
+  .nota-video { font-size: 14px; color: var(--niebla); }
   @media (max-width: 900px) {
+    .demo .ancho { grid-template-columns: 1fr; padding-block: 64px 32px; }
     .heroe .ancho { grid-template-columns: 1fr; padding-block: 120px 64px; }
     .telefono { width: min(290px, 80%); }
     .mosaico { grid-template-columns: 1fr 1fr; }
@@ -227,7 +271,7 @@
           <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.8-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.8 1.2 1.8 2.6 3.1 2.5 1.3-.1 1.7-.8 3.3-.8 1.5 0 1.9.8 3.3.8 1.4 0 2.2-1.2 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-4.2zM13.9 5.2c.7-.8 1.1-2 1-3.2-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3.1 1.1.1 2.2-.6 2.9-1.4z"/></svg>
           <span><small lang="es">Muy pronto</small><small lang="en">Coming soon</small>App Store</span>
         </a>
-        <a class="boton hilo" href="#viaje"><span><small lang="es">Mira cómo funciona</small><small lang="en">See how it works</small><span lang="es">Un viaje con VitaNav ↓</span><span lang="en">A trip with VitaNav ↓</span></span></a>
+        <a class="boton hilo" href="#demo"><span><small lang="es">Mira cómo funciona</small><small lang="en">See how it works</small><span lang="es">▶ Ver la demostración</span><span lang="en">▶ Watch the demo</span></span></a>
       </div>
       <div class="posicion">
         <span><b>25°32′N 080°19′W</b> Black Point</span>
@@ -290,6 +334,68 @@
   </div>
 </div>
 
+<section class="demo banda" id="demo">
+  <div class="ancho">
+    <div class="texto">
+      <span class="rotulo"><span lang="es">Mira cómo se usa</span><span lang="en">See how it works</span></span>
+      <h2><span lang="es">De la marina al sandbar en 6 toques.</span><span lang="en">From the marina to the sandbar in 6 taps.</span></h2>
+      <ol class="pasos" id="pasos"></ol>
+      <div class="controles">
+        <button class="play" id="play" type="button" aria-label="Reproducir / pausar">
+          <svg id="ico-play" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="ico-pausa" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+        </button>
+        <div class="progreso" aria-hidden="true"><i id="barra-progreso"></i></div>
+        <span class="tiempo dato" id="tiempo">0:00 / 0:28</span>
+      </div>
+      <p class="nota-video"><span lang="es">Demostración animada de la app. Pronto, también el video grabado en el agua.</span><span lang="en">Animated demo of the app. A video recorded on the water is coming soon.</span></p>
+    </div>
+
+    <div class="marco-demo">
+      <div class="telefono" role="img" aria-label="Demostración de VitaNav: marcar destino, calcular ruta segura y navegar">
+        <div class="pantalla d-pantalla">
+          <div class="isla-dyn"></div>
+          <svg class="mapa" viewBox="0 0 300 640" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <rect width="300" height="640" fill="#bfe0f5"/>
+            <path d="M0 0 H150 C125 70 150 140 110 210 C85 250 105 310 70 370 L0 450 Z" fill="#f1ede2"/>
+            <path d="M300 640 C270 560 300 500 255 440 C230 405 260 360 300 330 Z" fill="#f1ede2"/>
+            <path d="M95 220 C140 230 150 270 120 300 C100 320 82 290 88 262 Z" fill="rgba(239,68,68,0.3)"/>
+            <path d="M205 300 C245 295 262 330 245 355 C225 375 195 345 205 300 Z" fill="rgba(239,68,68,0.3)"/>
+            <path d="M170 410 C205 405 230 430 215 455 C200 470 170 455 170 410 Z" fill="rgba(250,204,21,0.35)"/>
+            <path d="M150 120 C175 120 180 140 175 160" fill="none" stroke="#c026d3" stroke-width="2" stroke-dasharray="6 4"/>
+            <g font-family="JetBrains Mono, monospace" font-size="11" fill="#2f5d86">
+              <text x="200" y="250">9</text><text x="150" y="360">7</text><text x="240" y="230">12</text><text x="120" y="480">11</text>
+              <text x="105" y="270" fill="#c81e1e">2</text><text x="225" y="330" fill="#c81e1e">3</text><text x="60" y="560">14</text>
+            </g>
+            <g><rect x="140" y="140" width="8" height="8" fill="#16a34a"/><polygon points="172,138 177,147 167,147" fill="#dc2626"/>
+               <rect x="150" y="190" width="8" height="8" fill="#16a34a"/><polygon points="182,188 187,197 177,197" fill="#dc2626"/></g>
+            <path id="d-ruta-borde" d="M160 110 C165 160 170 210 160 250 C150 300 175 330 175 380 C175 430 120 450 120 500 C120 540 150 560 160 590" fill="none" stroke="rgba(110,50,10,0.55)" stroke-width="12" stroke-linecap="round"/>
+            <path id="d-ruta" d="M160 110 C165 160 170 210 160 250 C150 300 175 330 175 380 C175 430 120 450 120 500 C120 540 150 560 160 590" fill="none" stroke="#f28c28" stroke-width="7" stroke-linecap="round"/>
+            <g id="d-destino"><circle cx="160" cy="590" r="14" fill="#0b5fb8" stroke="#fff" stroke-width="3"/><text x="160" y="595" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13" fill="#fff">1</text></g>
+            <circle id="d-toque" cx="160" cy="590" r="10" fill="rgba(11,95,184,0.35)"/>
+            <g id="d-barco"><circle r="16" fill="#fff" stroke="#0b5fb8" stroke-width="3"/><path d="M0 -10 L7 8 L0 4 L-7 8 Z" fill="#0b5fb8"/></g>
+            <g id="d-dedo"><circle r="15" fill="rgba(255,255,255,0.85)" stroke="rgba(0,0,0,0.25)" stroke-width="2"/></g>
+          </svg>
+          <div class="d-capa d-hud" id="d-hud">
+            <div><div class="t"><span lang="es">VELOCIDAD</span><span lang="en">SPEED</span></div><div class="v" id="d-vel">0.0<small>kn</small></div></div>
+            <div><div class="t"><span lang="es">RUMBO</span><span lang="en">COURSE</span></div><div class="v" id="d-rumbo">172°<small>S</small></div></div>
+            <div><div class="t"><span lang="es">DESTINO</span><span lang="en">TO GO</span></div><div class="v" id="d-mn">9.0<small>MN</small></div></div>
+          </div>
+          <div class="d-capa d-banner" id="d-banner"><span lang="es" id="d-banner-es">Máximo 3 kn en esta zona</span><span lang="en" id="d-banner-en">Max 3 kn in this zone</span></div>
+          <div class="d-capa d-alerta" id="d-alerta"><b><span lang="es">Agua poco profunda</span><span lang="en">Shallow water</span></b><span lang="es">2 ft · tu calado 3 ft · en 40 segundos</span><span lang="en">2 ft · your draft 3 ft · in 40 seconds</span><div class="ok" id="d-ok"><span lang="es">Entendido</span><span lang="en">Got it</span></div></div>
+          <div class="d-capa d-panel" id="d-panel">
+            <div class="fila"><span>9.0 MN</span><span>27 min</span><span lang="es">20 nudos</span><span lang="en">20 knots</span></div>
+            <div class="d-boton segura" id="d-segura"><span lang="es">✓ Ruta segura</span><span lang="en">✓ Safe route</span></div>
+            <div class="d-boton iniciar" id="d-iniciar"><span lang="es">▲ Iniciar navegación</span><span lang="en">▲ Start navigation</span></div>
+          </div>
+          <div class="d-capa d-detener" id="d-detener"><span lang="es">■ Detener</span><span lang="en">■ Stop</span></div>
+          <div class="d-capa d-toast" id="d-toast"><span lang="es">⚓ Has llegado</span><span lang="en">⚓ You have arrived</span></div>
+        </div>
+      </div>
+      <div class="subtitulo" id="subtitulo"></div>
+    </div>
+  </div>
+</section>
 <main class="viaje" id="viaje">
   <svg id="espina" aria-hidden="true" preserveAspectRatio="none"></svg>
 
@@ -534,13 +640,13 @@
           const x = c.x * ancho + Math.cos(a) * r * 1.35, y = c.y * alto + Math.sin(a) * r;
           a === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         }
-        ctx.strokeStyle = `rgba(127, 240, 230, ${0.16 - k * 0.011})`;
+        ctx.strokeStyle = `rgba(170, 245, 240, ${0.22 - k * 0.015})`;
         ctx.stroke();
       }
     }
     // números de sonda
     ctx.font = '500 12px JetBrains Mono, monospace';
-    ctx.fillStyle = 'rgba(147, 171, 198, 0.35)';
+    ctx.fillStyle = 'rgba(205, 225, 245, 0.4)';
     [[0.08, 0.3, '14'], [0.45, 0.2, '9'], [0.58, 0.75, '6'], [0.33, 0.62, '11'], [0.88, 0.18, '23'], [0.15, 0.55, '8']]
       .forEach(([x, y, n]) => ctx.fillText(n, x * ancho, y * alto));
   }
@@ -548,6 +654,124 @@
   medir(); dibujar();
   addEventListener('resize', () => { medir(); dibujar(); });
   if (!sinMovimiento) requestAnimationFrame(bucle);
+
+  // ── Demostración animada: un "video" de cómo se usa la app ──
+  (() => {
+    const DURACION = 28;
+    const escenas = [
+      { t0: 0, es: 'Marca tu destino: toca el mapa', en: 'Mark your destination: tap the map' },
+      { t0: 3, es: 'Toca “Ruta segura”: esquiva bajos y rocas', en: 'Tap “Safe route”: it avoids shoals and rocks' },
+      { t0: 7, es: 'Toca “Iniciar navegación”', en: 'Tap “Start navigation”' },
+      { t0: 9, es: 'Sigue la línea naranja: la voz te guía', en: 'Follow the orange line: the voice guides you' },
+      { t0: 15, es: 'Zona de manatíes: baja a 3 nudos', en: 'Manatee zone: slow down to 3 knots' },
+      { t0: 19, es: 'Si vas hacia un bajo, te avisa antes', en: 'Heading for a shoal? It warns you first' },
+      { t0: 23, es: 'Llegada: tu recorrido queda guardado', en: 'Arrival: your trip is saved' },
+    ];
+    const $ = (id) => document.getElementById(id);
+    const ruta = $('d-ruta'), borde = $('d-ruta-borde'), largo = ruta.getTotalLength();
+    [ruta, borde].forEach((p) => { p.style.strokeDasharray = `${largo}`; });
+    const lista = $('pasos');
+    escenas.forEach((e, i) => {
+      const li = document.createElement('li');
+      li.innerHTML = `<button type="button"><span class="n">${i + 1}</span><span><span lang="es">${e.es}</span><span lang="en">${e.en}</span></span></button>`;
+      li.firstChild.addEventListener('click', () => { t = e.t0 + 0.01; pintar(); });
+      lista.appendChild(li);
+    });
+    const tramo = (t, a, b) => Math.min(1, Math.max(0, (t - a) / (b - a)));
+    const entre = (t, a, b) => t >= a && t < b;
+    const ver = (id, si) => $(id).classList.toggle('oculto', !si);
+    const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+    const cardinal = (g) => ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'][Math.round(g / 45) % 8];
+    let t = 0, jugando = false, antes = 0;
+
+    function avance(t) {
+      if (t < 9) return 0;
+      if (t < 15) return 0.45 * tramo(t, 9, 15);
+      if (t < 19) return 0.45 + 0.1 * tramo(t, 15, 19);
+      if (t < 23) return 0.55 + 0.07 * tramo(t, 19, 23);
+      return 0.62 + 0.38 * tramo(t, 23, 26);
+    }
+    function nudos(t) {
+      if (t < 9) return 0;
+      if (t < 15) return 18.4 * tramo(t, 9, 12);
+      if (t < 17) return 18.4 - 13.2 * tramo(t, 15, 17);
+      if (t < 19) return 5.2 - 2.4 * tramo(t, 17, 19);
+      if (t < 23) return 2.8 + 3.2 * tramo(t, 19, 23);
+      if (t < 26) return 12;
+      return 0;
+    }
+    function pintar() {
+      const en = document.body.classList.contains('en');
+      const escena = escenas.reduce((a, e, i) => (t >= e.t0 ? i : a), 0);
+      $('subtitulo').textContent = en ? escenas[escena].en : escenas[escena].es;
+      [...lista.children].forEach((li, i) => li.firstChild.toggleAttribute('aria-current', false) || (i === escena && li.firstChild.setAttribute('aria-current', 'step')));
+      // dedo y toque en el mapa
+      const k = tramo(t, 0, 2);
+      $('d-dedo').setAttribute('transform', `translate(${230 - 70 * k} ${420 + 170 * k})`);
+      ver('d-dedo', t < 2.6);
+      const pulso = tramo(t, 2, 3);
+      $('d-toque').setAttribute('r', String(10 + 30 * pulso));
+      $('d-toque').style.opacity = entre(t, 2, 3) ? String(1 - pulso) : '0';
+      ver('d-destino', t >= 2);
+      // ruta segura que se dibuja
+      const dibujo = tramo(t, 4, 6);
+      [ruta, borde].forEach((p) => { p.style.strokeDashoffset = `${largo * (1 - dibujo)}`; });
+      // panel y botones
+      ver('d-panel', entre(t, 2.2, 8));
+      $('d-segura').classList.toggle('pulsado', entre(t, 3.5, 4.2));
+      $('d-iniciar').classList.toggle('pulsado', entre(t, 7.4, 8));
+      // navegación
+      ver('d-hud', t >= 8);
+      ver('d-detener', entre(t, 8, 26));
+      const p = avance(t), punto = ruta.getPointAtLength(p * largo), sig = ruta.getPointAtLength(Math.min(largo, p * largo + 4));
+      const rumbo = ((Math.atan2(sig.x - punto.x, -(sig.y - punto.y)) * 180) / Math.PI + 360) % 360;
+      $('d-barco').setAttribute('transform', `translate(${punto.x} ${punto.y}) rotate(${p >= 1 ? 180 : rumbo})`);
+      ver('d-barco', t >= 8);
+      const v = nudos(t);
+      $('d-vel').innerHTML = `${v.toFixed(1)}<small>kn</small>`;
+      $('d-vel').classList.toggle('rojo', entre(t, 15, 19.5) && v > 4.5);
+      $('d-rumbo').innerHTML = `${Math.round(rumbo)}°<small>${cardinal(rumbo)}</small>`;
+      $('d-mn').innerHTML = `${(9 * (1 - p)).toFixed(1)}<small>MN</small>`;
+      // avisos
+      ver('d-banner', entre(t, 15, 19.5));
+      const exceso = v > 4.5;
+      $('d-banner').classList.toggle('rojo', exceso);
+      $('d-banner-es').textContent = exceso ? '¡Baja la velocidad! Máximo 3 kn' : 'Máximo 3 kn en esta zona';
+      $('d-banner-en').textContent = exceso ? 'Slow down! Max 3 kn' : 'Max 3 kn in this zone';
+      ver('d-alerta', entre(t, 19.5, 22.8));
+      $('d-ok').classList.toggle('pulsado', entre(t, 22.2, 22.8));
+      ver('d-toast', t >= 26);
+      // controles
+      $('barra-progreso').style.width = `${(t / DURACION) * 100}%`;
+      $('tiempo').textContent = `${mmss(t)} / ${mmss(DURACION)}`;
+      $('ico-play').hidden = jugando;
+      $('ico-pausa').hidden = !jugando;
+    }
+    function cuadro(ahora) {
+      if (!jugando) return;
+      t += Math.min(0.1, (ahora - antes) / 1000);
+      antes = ahora;
+      if (t >= DURACION) t = 0;
+      pintar();
+      requestAnimationFrame(cuadro);
+    }
+    function reproducir(si) {
+      jugando = si;
+      if (si) { antes = performance.now(); requestAnimationFrame(cuadro); }
+      pintar();
+    }
+    $('play').addEventListener('click', () => reproducir(!jugando));
+    btn.es.addEventListener('click', pintar);
+    btn.en.addEventListener('click', pintar);
+    // Quieta, muestra el momento de navegar; se reproduce sola al verla (salvo "reducir movimiento").
+    t = 12; pintar();
+    if (!sinMovimiento && 'IntersectionObserver' in window) {
+      let primera = true;
+      new IntersectionObserver((e) => {
+        if (e[0].isIntersecting && primera) { primera = false; t = 0; reproducir(true); }
+      }, { threshold: 0.4 }).observe($('demo'));
+    }
+  })();
 
   // ── La ruta que baja por la página y se dibuja al hacer scroll ──
   const espina = document.getElementById('espina');
