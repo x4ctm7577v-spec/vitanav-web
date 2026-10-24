@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="VitaNav: navegación para barcos de recreo en Florida. Ruta segura que esquiva bajos y rocas, alarma de profundidad, clima por horas y SOS.">
+<meta name="description" content="NautikNav: navegación para barcos de recreo en Florida. Ruta segura que esquiva bajos y rocas, alarma de profundidad, clima por horas y SOS.">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<title>VitaNav</title>
+<title>NautikNav · Navega sin límites</title>
+<link rel="icon" type="image/png" href="favicon.png">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -79,6 +80,8 @@
     border-radius: 999px; padding: 8px 8px 8px 16px; }
   .marca { display: flex; align-items: center; gap: 10px; font: 800 19px var(--f-display); letter-spacing: -0.03em; }
   .marca svg { flex: none; }
+  .logo-caja { width: 38px; height: 38px; border-radius: 11px; background: #0a2748; display: grid; place-items: center; flex: none;
+    border: 1px solid rgba(127,240,230,0.35); }
   .der { display: flex; align-items: center; gap: 8px; }
   .idiomas { display: flex; padding: 3px; border-radius: 999px; background: rgba(255,255,255,0.06); }
   .idiomas button { font: 700 12px var(--f-dato); color: var(--niebla); background: none; border: 0; padding: 7px 11px; border-radius: 999px; cursor: pointer; }
@@ -270,8 +273,10 @@
 <header class="barra banda">
   <div class="ancho">
     <div class="marca">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--aqua)" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 15c3-3 13-3 16 0"/><path d="M6 19c2.5-2 9.5-2 12 0"/><path d="M13 4l-2 8M10 7l5 2"/></svg>
-      VitaNav
+      <span class="logo-caja" aria-hidden="true">
+        <svg width="26" height="26" viewBox="180 150 664 720"><path d="M512 196 L676 566 Q 512 476 348 566 Z" fill="#7ff0e6" stroke="#7ff0e6" stroke-width="18" stroke-linejoin="round"/><path d="M286 676 Q 342 624 398 676 T 512 676 T 626 676 T 738 676" fill="none" stroke="#7ff0e6" stroke-width="46" stroke-linecap="round"/><path d="M362 786 Q 400 750 438 786 T 512 786 T 586 786 T 662 786" fill="none" stroke="#4fb8b3" stroke-width="38" stroke-linecap="round"/></svg>
+      </span>
+      <span>Nautik<span style="color: var(--aqua)">Nav</span></span>
     </div>
     <div class="der">
       <div class="idiomas" role="group" aria-label="Idioma / Language">
@@ -300,8 +305,8 @@
         <span lang="en">Boat <span class="hueco">without fear</span> of <span class="naranja">running aground.</span></span>
       </h1>
       <p class="bajada">
-        <span lang="es">VitaNav traza la ruta segura para tu barco, te avisa 2 minutos antes de un bajo o una roca, te dice a qué velocidad ir y te guía con voz. Si estás empezando, es como llevar a un capitán al lado.</span>
-        <span lang="en">VitaNav plans the safe route for your boat, warns you 2 minutes before a shoal or a rock, tells you how fast to go and guides you by voice. If you are new to boating, it is like having a captain beside you.</span>
+        <span lang="es">NautikNav traza la ruta segura para tu barco, te avisa 2 minutos antes de un bajo o una roca, te dice a qué velocidad ir y te guía con voz. Si estás empezando, es como llevar a un capitán al lado.</span>
+        <span lang="en">NautikNav plans the safe route for your boat, warns you 2 minutes before a shoal or a rock, tells you how fast to go and guides you by voice. If you are new to boating, it is like having a captain beside you.</span>
       </p>
       <div class="acciones">
         <a class="boton claro" href="#descargar">
@@ -316,7 +321,7 @@
       </div>
     </div>
 
-    <div class="telefono" aria-label="VitaNav navegando por el canal de Black Point" role="img">
+    <div class="telefono" aria-label="NautikNav navegando por el canal de Black Point" role="img">
       <div class="pantalla">
         <div class="isla-dyn"></div>
         <svg class="mapa" viewBox="0 0 300 640" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -396,7 +401,7 @@
     </div>
 
     <div class="marco-demo">
-      <div class="telefono" role="img" aria-label="Demostración de VitaNav: marcar destino, calcular ruta segura y navegar">
+      <div class="telefono" role="img" aria-label="Demostración de NautikNav: marcar destino, calcular ruta segura y navegar">
         <div class="pantalla d-pantalla">
           <div class="isla-dyn"></div>
           <svg class="mapa" viewBox="0 0 300 640" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -478,7 +483,7 @@
       <div class="cabeza">
         <span class="rotulo"><span lang="es">La salida</span><span lang="en">Leaving the dock</span></span>
         <h2><span lang="es">Una ruta que esquiva lo que no ves.</span><span lang="en">A route around what you can’t see.</span></h2>
-        <p><span lang="es">Marca a dónde vas. En menos de un segundo, VitaNav calcula el camino con las cartas oficiales de NOAA: evita tierra, bajos, rocas y naufragios, pasa lejos de los peligros y te saca de la marina por el centro del canal, de baliza en baliza.</span><span lang="en">Mark where you are going. In under a second, VitaNav plans the way with official NOAA charts: around land, shoals, rocks and wrecks, clear of hazards, and out of the marina down the middle of the channel, marker by marker.</span></p>
+        <p><span lang="es">Marca a dónde vas. En menos de un segundo, NautikNav calcula el camino con las cartas oficiales de NOAA: evita tierra, bajos, rocas y naufragios, pasa lejos de los peligros y te saca de la marina por el centro del canal, de baliza en baliza.</span><span lang="en">Mark where you are going. In under a second, NautikNav plans the way with official NOAA charts: around land, shoals, rocks and wrecks, clear of hazards, and out of the marina down the middle of the channel, marker by marker.</span></p>
       </div>
       <div class="mosaico">
         <article class="pieza a3">
@@ -501,7 +506,7 @@
               <polygon points="98,36 112,62 84,62" fill="var(--rojo)"/><rect x="95" y="62" width="6" height="40" fill="var(--niebla)"/>
               <path d="M60 118 V62" stroke="var(--ruta)" stroke-width="6" stroke-linecap="round"/><path d="M60 46 L68 66 L60 61 L52 66 Z" fill="var(--texto)"/>
             </svg>
-            <p><span lang="es">Al volver del mar a puerto, las balizas rojas van a tu derecha. VitaNav te lleva por el centro, y en Ayuda y consejos te explica lo básico.</span><span lang="en">Coming back in from sea, red markers stay on your right. VitaNav keeps you in the middle, and Help &amp; tips explains the basics.</span></p>
+            <p><span lang="es">Al volver del mar a puerto, las balizas rojas van a tu derecha. NautikNav te lleva por el centro, y en Ayuda y consejos te explica lo básico.</span><span lang="en">Coming back in from sea, red markers stay on your right. NautikNav keeps you in the middle, and Help &amp; tips explains the basics.</span></p>
           </div>
         </article>
       </div>
@@ -565,7 +570,7 @@
       <div class="cabeza">
         <span class="rotulo"><span lang="es">De vuelta</span><span lang="en">Heading home</span></span>
         <h2><span lang="es">Tu día en el agua, guardado solo.</span><span lang="en">Your day on the water, saved automatically.</span></h2>
-        <p><span lang="es">Mientras navegas, VitaNav graba tu recorrido. Con un toque vuelves a la rampa o marina de donde saliste, por agua segura. Y si algo sale mal, el botón SOS siempre está a mano, también gratis.</span><span lang="en">While you navigate, VitaNav records your track. One tap takes you back to the ramp or marina you left from, through safe water. And if something goes wrong, the SOS button is always there, free.</span></p>
+        <p><span lang="es">Mientras navegas, NautikNav graba tu recorrido. Con un toque vuelves a la rampa o marina de donde saliste, por agua segura. Y si algo sale mal, el botón SOS siempre está a mano, también gratis.</span><span lang="en">While you navigate, NautikNav records your track. One tap takes you back to the ramp or marina you left from, through safe water. And if something goes wrong, the SOS button is always there, free.</span></p>
       </div>
       <div class="mosaico">
         <article class="pieza a2"><h3><span lang="es">Volver a la salida</span><span lang="en">Return to start</span></h3><p><span lang="es">Recuerda dónde saliste y te guía de vuelta.</span><span lang="en">Remembers where you left from and guides you back.</span></p></article>
@@ -622,7 +627,7 @@
   <div class="ancho">
     <span class="rotulo"><span lang="es">Muy pronto en iPhone</span><span lang="en">Coming soon on iPhone</span></span>
     <h2><span lang="es">Suelta amarras.<br><span class="naranja">Nosotros vigilamos el fondo.</span></span><span lang="en">Cast off.<br><span class="naranja">We’ll watch the bottom.</span></span></h2>
-    <p class="niebla" style="max-width: 36em; font-size: 18px"><span lang="es">VitaNav está en sus últimas pruebas en el agua de Biscayne Bay. Cuando salga en la App Store, este botón te llevará directo a la descarga.</span><span lang="en">VitaNav is in its final on-the-water tests in Biscayne Bay. When it launches on the App Store, this button will take you straight to the download.</span></p>
+    <p class="niebla" style="max-width: 36em; font-size: 18px"><span lang="es">NautikNav está en sus últimas pruebas en el agua de Biscayne Bay. Cuando salga en la App Store, este botón te llevará directo a la descarga.</span><span lang="en">NautikNav is in its final on-the-water tests in Biscayne Bay. When it launches on the App Store, this button will take you straight to the download.</span></p>
     <span class="boton claro" role="img" aria-label="Muy pronto en la App Store / Coming soon on the App Store">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.8-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.8 1.2 1.8 2.6 3.1 2.5 1.3-.1 1.7-.8 3.3-.8 1.5 0 1.9.8 3.3.8 1.4 0 2.2-1.2 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-4.2zM13.9 5.2c.7-.8 1.1-2 1-3.2-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3.1 1.1.1 2.2-.6 2.9-1.4z"/></svg>
       <span><small lang="es">Muy pronto en la</small><small lang="en">Coming soon on the</small>App Store</span>
@@ -632,7 +637,7 @@
 
 <footer class="banda">
   <div class="ancho">
-    <span>© 2026 VitaNav</span>
+    <span>© 2026 NautikNav</span>
     <span lang="es">Ayuda a la navegación: mira siempre el agua, las balizas y las cartas oficiales.</span>
     <span lang="en">A navigation aid: always watch the water, the markers and official charts.</span>
     <a href="privacidad.html"><span lang="es">Política de privacidad</span><span lang="en">Privacy policy</span></a>
