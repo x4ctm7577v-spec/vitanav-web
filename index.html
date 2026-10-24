@@ -15,12 +15,13 @@
      página y 4 paradas del viaje (antes de salir → salida → en el agua → de vuelta). Un solo aspecto:
      noche náutica (diseño oscuro a propósito). */
   :root {
-    --noche: #0a3a66;        /* fondo: azul de mar */
-    --casco: #0e4577;        /* superficies */
-    --casco-2: #145394;
-    --hilo: rgba(205, 232, 255, 0.2);  /* líneas finas */
-    --texto: #f5faff;
-    --niebla: #bcd3ea;       /* texto secundario */
+    --noche: #0b6fae;        /* fondo: azul de mar claro (Caribe) */
+    --tinta: #05325a;        /* texto oscuro sobre botones claros */
+    --casco: rgba(255, 255, 255, 0.10);   /* tarjetas de cristal */
+    --casco-2: rgba(255, 255, 255, 0.20);
+    --hilo: rgba(255, 255, 255, 0.32);  /* líneas finas */
+    --texto: #ffffff;
+    --niebla: #e3f3ff;       /* texto secundario */
     --aqua: #7ff0e6;         /* acento de la app */
     --ruta: #ff8a2a;         /* la ruta segura */
     --rojo: #ff5a5f;
@@ -34,14 +35,39 @@
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
-  body { background: var(--noche); background-image: linear-gradient(180deg, #0d5390 0%, var(--noche) 32%, #0a3a66 70%, #08305a 100%); color: var(--texto); font: 17px/1.6 var(--f-texto); overflow-x: hidden; }
+  body { background: var(--noche); background-image: linear-gradient(180deg, #2bb8ea 0%, #189fdc 16%, #1089cb 42%, #0c78b8 72%, #0a68a3 100%); color: var(--texto); font: 17px/1.6 var(--f-texto); overflow-x: hidden; }
+  /* Olas animadas (espuma blanca que se mueve a distintas velocidades) */
+  .olas { display: block; width: 100%; height: clamp(60px, 9vw, 130px); }
+  .olas use { animation: ola 14s cubic-bezier(.55,.5,.45,.5) infinite; }
+  .olas use:nth-child(1) { animation-delay: -2s; animation-duration: 9s; }
+  .olas use:nth-child(2) { animation-delay: -3s; animation-duration: 12s; }
+  .olas use:nth-child(3) { animation-delay: -4s; animation-duration: 15s; }
+  .olas use:nth-child(4) { animation-delay: -5s; animation-duration: 22s; }
+  @keyframes ola { 0% { transform: translate3d(-90px, 0, 0); } 100% { transform: translate3d(85px, 0, 0); } }
+  @media (prefers-reduced-motion: reduce) { .olas use { animation: none; } }
+  .ola-sep { margin-block: -1px; }
+  .ola-sep.volteada { transform: scaleY(-1); }
+  /* Reflejos de sol en el agua */
+  .brillos { position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0.55;
+    background:
+      radial-gradient(12px 4px at 20% 30%, rgba(255,255,255,0.9), transparent),
+      radial-gradient(18px 5px at 70% 22%, rgba(255,255,255,0.8), transparent),
+      radial-gradient(10px 3px at 45% 60%, rgba(255,255,255,0.85), transparent),
+      radial-gradient(16px 4px at 85% 70%, rgba(255,255,255,0.8), transparent),
+      radial-gradient(14px 4px at 10% 80%, rgba(255,255,255,0.8), transparent),
+      radial-gradient(20px 5px at 60% 85%, rgba(255,255,255,0.7), transparent); }
+  @media (prefers-reduced-motion: no-preference) {
+    .brillos { animation: brillar 5s ease-in-out infinite alternate; }
+    @keyframes brillar { 0% { opacity: 0.25; transform: translateX(-12px); } 100% { opacity: 0.7; transform: translateX(12px); } }
+  }
   .banda { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   .ancho { max-width: 1180px; margin: 0 auto; position: relative; }
   h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; letter-spacing: -0.035em; }
   p { margin: 0; }
   .dato { font-family: var(--f-dato); font-variant-numeric: tabular-nums; }
   .niebla { color: var(--niebla); }
-  .rotulo { font: 700 12px var(--f-dato); letter-spacing: 0.16em; text-transform: uppercase; color: var(--aqua); }
+  .rotulo { font: 700 12px var(--f-dato); letter-spacing: 0.16em; text-transform: uppercase; color: #fff; align-self: flex-start;
+    background: rgba(5, 50, 90, 0.32); border: 1px solid rgba(255,255,255,0.3); padding: 6px 12px; border-radius: 999px; }
   a { color: var(--aqua); }
   :focus-visible { outline: 3px solid var(--aqua); outline-offset: 3px; border-radius: 10px; }
   body:not(.en) [lang="en"], body.en [lang="es"] { display: none !important; }
@@ -49,24 +75,25 @@
   /* ── Barra ── */
   .barra { position: fixed; top: 0; left: 0; right: 0; z-index: 20; padding-top: env(safe-area-inset-top, 0px); }
   .barra .ancho { margin-top: 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px;
-    background: rgba(10, 58, 102, 0.62); backdrop-filter: blur(14px) saturate(140%); border: 1px solid var(--hilo);
+    background: rgba(8, 92, 150, 0.55); backdrop-filter: blur(14px) saturate(150%); border: 1px solid var(--hilo);
     border-radius: 999px; padding: 8px 8px 8px 16px; }
   .marca { display: flex; align-items: center; gap: 10px; font: 800 19px var(--f-display); letter-spacing: -0.03em; }
   .marca svg { flex: none; }
   .der { display: flex; align-items: center; gap: 8px; }
   .idiomas { display: flex; padding: 3px; border-radius: 999px; background: rgba(255,255,255,0.06); }
   .idiomas button { font: 700 12px var(--f-dato); color: var(--niebla); background: none; border: 0; padding: 7px 11px; border-radius: 999px; cursor: pointer; }
-  .idiomas button[aria-pressed="true"] { background: var(--texto); color: var(--noche); }
-  .pildora { font: 700 14px var(--f-texto); color: var(--noche); background: var(--aqua); text-decoration: none; padding: 9px 16px; border-radius: 999px; white-space: nowrap; }
+  .idiomas button[aria-pressed="true"] { background: var(--texto); color: var(--tinta); }
+  .pildora { font: 700 14px var(--f-texto); color: var(--tinta); background: var(--aqua); text-decoration: none; padding: 9px 16px; border-radius: 999px; white-space: nowrap; }
 
   /* ── Héroe: carta viva ── */
   .heroe { position: relative; overflow: hidden; isolation: isolate; }
   #carta-viva { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
   .heroe::after { content: ""; position: absolute; inset: 0; z-index: -1;
-    background: radial-gradient(60% 55% at 78% 45%, rgba(127,240,230,0.16), transparent 70%),
-                radial-gradient(50% 40% at 15% 0%, rgba(255,214,150,0.14), transparent 70%),
-                linear-gradient(180deg, rgba(13,83,144,0) 0%, rgba(13,83,144,0) 50%, var(--noche) 100%); }
-  .heroe .ancho { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 40px; align-items: center; padding-block: 140px 90px; }
+    background: radial-gradient(60% 55% at 78% 45%, rgba(127,240,230,0.30), transparent 70%),
+                radial-gradient(55% 45% at 12% 0%, rgba(255,236,170,0.45), transparent 70%); }
+  .heroe .ancho { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 40px; align-items: center; padding-block: 140px 40px; }
+  .heroe .olas { position: relative; z-index: 1; margin-top: -10px; }
+  .heroe h1, .final h2 { text-shadow: 0 4px 24px rgba(4, 50, 90, 0.35); }
   .heroe .texto { display: flex; flex-direction: column; gap: 26px; min-width: 0; }
   .heroe h1 { font-size: clamp(46px, 8.2vw, 104px); line-height: 0.92; font-weight: 800; }
   .heroe h1 .naranja { color: var(--ruta); }
@@ -74,7 +101,7 @@
   .heroe .bajada { font-size: 19px; color: var(--niebla); max-width: 31em; }
   .acciones { display: flex; flex-wrap: wrap; gap: 12px; }
   .boton { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; border-radius: 18px; padding: 14px 22px; font: 800 16px var(--f-texto); border: 1.5px solid transparent; }
-  .boton.claro { background: var(--texto); color: var(--noche); }
+  .boton.claro { background: var(--texto); color: var(--tinta); box-shadow: 0 12px 30px rgba(4, 50, 90, 0.25); }
   .boton.claro small, .boton.hilo small { display: block; font: 600 11px var(--f-texto); opacity: 0.65; }
   .boton.hilo { border-color: var(--hilo); color: var(--texto); background: rgba(255,255,255,0.03); }
   .posicion { display: flex; flex-wrap: wrap; gap: 8px 18px; font: 500 13px var(--f-dato); color: var(--niebla); }
@@ -84,17 +111,17 @@
   .telefono { position: relative; width: min(330px, 100%); aspect-ratio: 9 / 19.2; margin-inline: auto; border-radius: 52px;
     background: #01060f; padding: 12px; box-shadow: 0 0 0 1.5px rgba(255,255,255,0.14), 0 40px 120px -20px rgba(127,240,230,0.25), 0 30px 60px rgba(0,0,0,0.6);
     transform: rotate(3deg); }
-  .pantalla { position: relative; width: 100%; height: 100%; border-radius: 41px; overflow: hidden; background: #0b2a4a; }
+  .pantalla { position: relative; width: 100%; height: 100%; border-radius: 41px; overflow: hidden; background: #bfe0f5; }
   .pantalla svg.mapa { position: absolute; inset: 0; width: 100%; height: 100%; }
   .isla-dyn { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 34%; height: 26px; background: #000; border-radius: 20px; z-index: 3; }
-  .p-hud { position: absolute; top: 46px; left: 10px; right: 10px; display: grid; grid-template-columns: repeat(3, 1fr); background: rgba(0,0,0,0.82);
-    border: 1px solid rgba(255,90,60,0.35); border-radius: 18px; padding: 8px 2px; text-align: center; z-index: 2; }
-  .p-hud div + div { border-left: 1px solid rgba(255,90,60,0.3); }
-  .p-hud .t { font: 700 8px var(--f-texto); letter-spacing: 0.12em; color: #a5523f; }
-  .p-hud .v { font: 700 22px var(--f-dato); color: #ff6a4a; line-height: 1.15; }
-  .p-hud .v small { font-size: 9px; color: #e3a03a; margin-left: 1px; }
-  .p-aviso { position: absolute; top: 116px; left: 10px; right: 10px; background: #5a0e0e; color: #ffd2c4; border-radius: 14px; padding: 8px 10px; font: 800 12px var(--f-texto); z-index: 2; display: flex; gap: 8px; align-items: center; }
-  .p-detener { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); background: #3a0a0a; color: #ff6a4a; border: 1px solid rgba(255,90,60,0.35); border-radius: 999px; padding: 10px 28px; font: 800 13px var(--f-texto); z-index: 2; }
+  .p-hud { position: absolute; top: 46px; left: 10px; right: 10px; display: grid; grid-template-columns: repeat(3, 1fr); background: #fff;
+    border: 1.5px solid rgba(0,0,0,0.12); border-radius: 18px; padding: 8px 2px; text-align: center; z-index: 2; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+  .p-hud div + div { border-left: 1.5px solid rgba(0,0,0,0.1); }
+  .p-hud .t { font: 700 8px var(--f-texto); letter-spacing: 0.12em; color: #3a4553; }
+  .p-hud .v { font: 700 22px var(--f-dato); color: #000; line-height: 1.15; }
+  .p-hud .v small { font-size: 9px; color: #0b5fb8; margin-left: 1px; }
+  .p-aviso { position: absolute; top: 116px; left: 10px; right: 10px; background: #fef3c7; color: #000; border: 1.5px solid #f59e0b; border-radius: 14px; padding: 8px 10px; font: 800 12px var(--f-texto); z-index: 2; display: flex; gap: 8px; align-items: center; }
+  .p-detener { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); background: #d90f0f; color: #fff; border-radius: 999px; padding: 10px 28px; font: 800 13px var(--f-texto); z-index: 2; }
 
   /* Cinta de datos */
   .cinta { border-block: 1px solid var(--hilo); overflow: hidden; background: rgba(255,255,255,0.015); }
@@ -120,7 +147,8 @@
 
   /* Mosaico de demos */
   .mosaico { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
-  .pieza { background: linear-gradient(180deg, var(--casco-2), var(--casco)); border: 1px solid var(--hilo); border-radius: 26px; padding: 22px; display: flex; flex-direction: column; gap: 12px; min-width: 0; overflow: hidden; }
+  .pieza { background: linear-gradient(180deg, var(--casco-2), var(--casco)); border: 1px solid var(--hilo); border-radius: 26px;
+    backdrop-filter: blur(10px); box-shadow: 0 18px 40px rgba(4, 50, 90, 0.18); padding: 22px; display: flex; flex-direction: column; gap: 12px; min-width: 0; overflow: hidden; }
   .pieza h3 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
   .pieza p { color: var(--niebla); font-size: 15.5px; }
   .a3 { grid-column: span 3; } .a2 { grid-column: span 2; } .a4 { grid-column: span 4; } .a6 { grid-column: span 6; }
@@ -169,7 +197,9 @@
   .gratis .check li::before { background-color: rgba(255,255,255,0.12); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f2f7fc' stroke-width='4' stroke-linecap='round'%3E%3Cpath d='M6 12l4 4 8-9'/%3E%3C/svg%3E"); }
 
   /* Final */
-  .final { position: relative; overflow: hidden; }
+  .final { position: relative; overflow: hidden; isolation: isolate;
+    background: radial-gradient(70% 60% at 85% 20%, rgba(127,240,230,0.25), transparent 70%), linear-gradient(180deg, #0d78bd, #0a66a5); }
+  footer { background: #0a66a5; }
   .final .ancho { padding-block: 120px; display: flex; flex-direction: column; align-items: flex-start; gap: 26px; }
   .final h2 { font-size: clamp(48px, 9vw, 120px); line-height: 0.9; font-weight: 800; }
   .final h2 .naranja { color: var(--ruta); }
@@ -253,8 +283,15 @@
   </div>
 </header>
 
-<section class="heroe banda">
+<!-- Forma de una ola (se reutiliza en todas las olas de la página) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs><path id="ola" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"/></defs>
+</svg>
+
+<section class="heroe">
   <canvas id="carta-viva" aria-hidden="true"></canvas>
+  <div class="brillos" aria-hidden="true"></div>
+  <div class="banda">
   <div class="ancho">
     <div class="texto">
       <span class="rotulo"><span lang="es">Para barcos de recreo · Florida</span><span lang="en">For recreational boats · Florida</span></span>
@@ -279,23 +316,23 @@
       </div>
     </div>
 
-    <div class="telefono" aria-label="VitaNav navegando de noche por el canal de Black Point" role="img">
+    <div class="telefono" aria-label="VitaNav navegando por el canal de Black Point" role="img">
       <div class="pantalla">
         <div class="isla-dyn"></div>
         <svg class="mapa" viewBox="0 0 300 640" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <rect width="300" height="640" fill="#071a30"/>
-          <path d="M0 0 H120 C100 90 135 170 95 250 C70 300 95 380 60 440 L0 520 Z" fill="#102a20"/>
+          <rect width="300" height="640" fill="#bfe0f5"/>
+          <path d="M0 0 H120 C100 90 135 170 95 250 C70 300 95 380 60 440 L0 520 Z" fill="#f1ede2"/>
           <path d="M80 250 C120 260 135 300 105 330 C85 350 70 320 76 295 Z" fill="rgba(255,90,95,0.28)"/>
           <path d="M190 380 C230 370 255 400 238 430 C220 455 180 430 190 380 Z" fill="rgba(255,90,95,0.28)"/>
           <path d="M175 170 C215 160 240 190 222 215 C205 235 170 220 175 170 Z" fill="rgba(251,191,36,0.2)"/>
-          <g font-family="JetBrains Mono, monospace" font-size="11" fill="#7fa3c7">
+          <g font-family="JetBrains Mono, monospace" font-size="11" fill="#2f5d86">
             <text x="200" y="300">9</text><text x="140" y="390">7</text><text x="245" y="270">12</text><text x="210" y="520">11</text>
             <text x="98" y="300" fill="#ff8080">2</text><text x="215" y="412" fill="#ff8080">3</text>
           </g>
           <g><rect x="128" y="150" width="8" height="8" fill="#22c55e"/><polygon points="160,148 165,157 155,157" fill="#ff5a5f"/>
              <rect x="140" y="215" width="8" height="8" fill="#22c55e"/><polygon points="172,213 177,222 167,222" fill="#ff5a5f"/></g>
-          <circle cx="160" cy="360" r="46" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.2"/>
-          <circle cx="160" cy="360" r="92" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.2"/>
+          <circle cx="160" cy="360" r="46" fill="none" stroke="rgba(11,95,184,0.35)" stroke-width="1.2"/>
+          <circle cx="160" cy="360" r="92" fill="none" stroke="rgba(11,95,184,0.2)" stroke-width="1.2"/>
           <path d="M110 120 C135 160 150 220 158 270 C165 320 150 345 160 360" fill="none" stroke="rgba(150,150,150,0.6)" stroke-width="4" stroke-linecap="round"/>
           <path d="M160 360 C170 400 160 440 190 480 C210 510 220 560 235 640" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round"/>
           <path d="M160 360 C170 400 160 440 190 480 C210 510 220 560 235 640" fill="none" stroke="#ff8a2a" stroke-width="8" stroke-linecap="round"/>
@@ -313,6 +350,13 @@
       </div>
     </div>
   </div>
+  </div>
+  <svg class="olas" viewBox="0 24 150 28" preserveAspectRatio="none" aria-hidden="true">
+    <use href="#ola" x="48" y="0" fill="rgba(255,255,255,0.55)"/>
+    <use href="#ola" x="48" y="3" fill="rgba(255,255,255,0.35)"/>
+    <use href="#ola" x="48" y="5" fill="rgba(255,255,255,0.22)"/>
+    <use href="#ola" x="48" y="7" fill="rgba(24,159,220,0.85)"/>
+  </svg>
 </section>
 
 <div class="cinta" aria-hidden="true">
@@ -441,7 +485,7 @@
           <h3><span lang="es">Profundidad según tu calado</span><span lang="en">Depth for your draft</span></h3>
           <div class="perfil" aria-hidden="true">
             <svg viewBox="0 0 300 120" preserveAspectRatio="none">
-              <path d="M0 30 C40 30 50 85 90 92 C120 97 130 70 160 64 C200 56 210 104 240 106 C265 108 280 60 300 50 V0 H0 Z" fill="#071a30"/>
+              <path d="M0 30 C40 30 50 85 90 92 C120 97 130 70 160 64 C200 56 210 104 240 106 C265 108 280 60 300 50 V0 H0 Z" fill="#0d5d96"/>
               <line x1="0" y1="80" x2="300" y2="80" stroke="var(--rojo)" stroke-width="2" stroke-dasharray="6 4"/>
               <rect x="70" y="112" width="45" height="8" fill="var(--rojo)"/><rect x="0" y="112" width="70" height="8" fill="var(--verde)"/>
               <rect x="115" y="112" width="110" height="8" fill="var(--verde)"/><rect x="225" y="112" width="30" height="8" fill="var(--rojo)"/><rect x="255" y="112" width="45" height="8" fill="var(--verde)"/>
@@ -567,7 +611,14 @@
   </section>
 </main>
 
+<svg class="olas ola-sep" viewBox="0 24 150 28" preserveAspectRatio="none" aria-hidden="true">
+  <use href="#ola" x="48" y="0" fill="rgba(255,255,255,0.35)"/>
+  <use href="#ola" x="48" y="3" fill="rgba(255,255,255,0.22)"/>
+  <use href="#ola" x="48" y="5" fill="rgba(13,120,189,0.5)"/>
+  <use href="#ola" x="48" y="7" fill="#0d78bd"/>
+</svg>
 <section class="final banda" id="descargar">
+  <div class="brillos" aria-hidden="true"></div>
   <div class="ancho">
     <span class="rotulo"><span lang="es">Muy pronto en iPhone</span><span lang="en">Coming soon on iPhone</span></span>
     <h2><span lang="es">Suelta amarras.<br><span class="naranja">Nosotros vigilamos el fondo.</span></span><span lang="en">Cast off.<br><span class="naranja">We’ll watch the bottom.</span></span></h2>
@@ -640,13 +691,13 @@
           const x = c.x * ancho + Math.cos(a) * r * 1.35, y = c.y * alto + Math.sin(a) * r;
           a === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         }
-        ctx.strokeStyle = `rgba(170, 245, 240, ${0.22 - k * 0.015})`;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${0.34 - k * 0.022})`;
         ctx.stroke();
       }
     }
     // números de sonda
     ctx.font = '500 12px JetBrains Mono, monospace';
-    ctx.fillStyle = 'rgba(205, 225, 245, 0.4)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
     [[0.08, 0.3, '14'], [0.45, 0.2, '9'], [0.58, 0.75, '6'], [0.33, 0.62, '11'], [0.88, 0.18, '23'], [0.15, 0.55, '8']]
       .forEach(([x, y, n]) => ctx.fillText(n, x * ancho, y * alto));
   }
