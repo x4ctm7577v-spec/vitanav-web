@@ -47,6 +47,9 @@
   @keyframes ola { 0% { transform: translate3d(-90px, 0, 0); } 100% { transform: translate3d(85px, 0, 0); } }
   @media (prefers-reduced-motion: reduce) { .olas use { animation: none; } }
   .ola-sep { margin-block: -1px; }
+  /* Mar vivo: 3 lienzos apilados → olas de atrás · lanchas 3D · olas de delante (tapan el casco) */
+  .mar-vivo { position: relative; height: clamp(190px, 24vw, 300px); margin-top: -60px; margin-bottom: -1px; pointer-events: none; }
+  .mar-vivo canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .ola-sep.volteada { transform: scaleY(-1); }
   /* Reflejos de sol en el agua */
   .brillos { position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0.55;
@@ -356,12 +359,8 @@
     </div>
   </div>
   </div>
-  <svg class="olas" viewBox="0 24 150 28" preserveAspectRatio="none" aria-hidden="true">
-    <use href="#ola" x="48" y="0" fill="rgba(255,255,255,0.55)"/>
-    <use href="#ola" x="48" y="3" fill="rgba(255,255,255,0.35)"/>
-    <use href="#ola" x="48" y="5" fill="rgba(255,255,255,0.22)"/>
-    <use href="#ola" x="48" y="7" fill="rgba(24,159,220,0.85)"/>
-  </svg>
+  <!-- Mar vivo: olas y lanchas rápidas en 3D que flotan sobre ellas -->
+  <div class="mar-vivo" data-fondo="rgba(24,159,220,0.92)" data-lanchas="3" aria-hidden="true"></div>
 </section>
 
 <div class="cinta" aria-hidden="true">
@@ -616,12 +615,7 @@
   </section>
 </main>
 
-<svg class="olas ola-sep" viewBox="0 24 150 28" preserveAspectRatio="none" aria-hidden="true">
-  <use href="#ola" x="48" y="0" fill="rgba(255,255,255,0.35)"/>
-  <use href="#ola" x="48" y="3" fill="rgba(255,255,255,0.22)"/>
-  <use href="#ola" x="48" y="5" fill="rgba(13,120,189,0.5)"/>
-  <use href="#ola" x="48" y="7" fill="#0d78bd"/>
-</svg>
+<div class="mar-vivo" data-fondo="#0d78bd" data-lanchas="1" style="margin-top: 0" aria-hidden="true"></div>
 <section class="final banda" id="descargar">
   <div class="brillos" aria-hidden="true"></div>
   <div class="ancho">
@@ -856,6 +850,209 @@
   addEventListener('resize', construir);
   addEventListener('scroll', avanzar, { passive: true });
   document.fonts?.ready.then(construir);
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ── Mar vivo: olas animadas + lanchas rápidas en 3D que flotan, cabecean y dejan estela ──
+// Cada .mar-vivo tiene 3 lienzos: olas de atrás (2D) · lanchas (WebGL) · olas de delante y espuma (2D).
+// La altura de cada ola se calcula con la misma fórmula para dibujarla y para mover las lanchas.
+(() => {
+  const quieto = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hayWebGL = (() => { try { return !!document.createElement('canvas').getContext('webgl'); } catch (e) { return false; } })();
+
+  // Capas de ola: [color, altura base (0-1 del alto), amplitud px, longitud de onda px, velocidad]
+  const capasAtras = [['rgba(255,255,255,0.55)', 0.60, 13, 420, 1.1], ['rgba(255,255,255,0.35)', 0.66, 11, 300, -0.8]];
+  const capasDelante = (fondo) => [['rgba(255,255,255,0.3)', 0.72, 9, 360, 1.4], [fondo, 0.79, 8, 520, -0.6]];
+  const alturaOla = ([, base, amp, largo, vel], x, t, alto) =>
+    alto * base + amp * Math.sin((x / largo) * Math.PI * 2 + t * vel) + amp * 0.3 * Math.sin((x / largo) * Math.PI * 4.6 + t * vel * 1.7 + 1.3);
+
+  function pintarCapas(ctx, capas, ancho, alto, t) {
+    for (const capa of capas) {
+      ctx.beginPath(); ctx.moveTo(0, alto);
+      for (let x = 0; x <= ancho + 8; x += 8) ctx.lineTo(x, alturaOla(capa, x, t, alto));
+      ctx.lineTo(ancho, alto); ctx.closePath(); ctx.fillStyle = capa[0]; ctx.fill();
+    }
+  }
+
+  // ── Modelo 3D de una lancha de consola central con T-top (en píxeles; proa hacia +x) ──
+  function lancha(L, colorFranja) {
+    const B = L * 0.34, D = L * 0.2; // manga y puntal
+    const grupo = new THREE.Group();
+    const pos = [], col = [];
+    const c = (hex) => new THREE.Color(hex).convertSRGBToLinear(); // colores reales (pantalla en sRGB)
+    const BLANCO = c('#f7fafc'), FONDO = c('#0a2748'), FRANJA = c(colorFranja), CUBIERTA = c('#dfe6ec');
+    const tri = (a, b, d, color) => { pos.push(...a, ...b, ...d); for (let i = 0; i < 3; i++) col.push(color.r, color.g, color.b); };
+    const quad = (a, b, d, e, color) => { tri(a, b, d, color); tri(a, d, e, color); };
+    // secciones del casco, de popa (s=0) a proa (s=1): borda, franja, pantoque, quilla…
+    const N = 16, secc = [];
+    for (let i = 0; i <= N; i++) {
+      const s = i / N, x = -L / 2 + s * L;
+      const w = (B / 2) * (s < 0.55 ? 1 : Math.sqrt(Math.max(0, 1 - ((s - 0.55) / 0.45) ** 2)));
+      const borda = D * (0.55 + 0.3 * s * s);
+      const quilla = -D * 0.45 * (s < 0.7 ? 1 : 1 - 0.9 * ((s - 0.7) / 0.3) ** 1.5);
+      secc.push([
+        [x, borda, -w], [x, borda - D * 0.17, -w * 0.99], [x, quilla * 0.3, -w * 0.93], [x, quilla, 0],
+        [x, quilla * 0.3, w * 0.93], [x, borda - D * 0.17, w * 0.99], [x, borda, w],
+      ]);
+    }
+    const colores = [FRANJA, BLANCO, FONDO, FONDO, BLANCO, FRANJA];
+    for (let i = 0; i < N; i++) {
+      for (let j = 0; j < 6; j++) quad(secc[i][j], secc[i + 1][j], secc[i + 1][j + 1], secc[i][j + 1], colores[j]);
+      quad(secc[i][6], secc[i + 1][6], [secc[i + 1][0][0], secc[i + 1][0][1] - 1, secc[i + 1][0][2]], [secc[i][0][0], secc[i][0][1] - 1, secc[i][0][2]], CUBIERTA);
+    }
+    const centro = [secc[0][0][0], 0, 0]; // espejo de popa
+    for (let j = 0; j < 6; j++) tri(centro, secc[0][j + 1], secc[0][j], BLANCO);
+    tri(centro, secc[0][0], secc[0][6], BLANCO);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    geo.computeVertexNormals();
+    const mat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.45, metalness: 0.05, side: THREE.DoubleSide });
+    grupo.add(new THREE.Mesh(geo, mat));
+
+    const caja = (w, h, d, color, x, y, z, op = 1) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color: c(color), flatShading: true, roughness: 0.4, transparent: op < 1, opacity: op }));
+      m.position.set(x, y, z); grupo.add(m); return m;
+    };
+    const cubierta = D * 0.6;
+    // consola central y parabrisas
+    caja(L * 0.15, D * 0.6, B * 0.42, '#ffffff', -L * 0.02, cubierta + D * 0.3, 0);
+    const parabrisas = caja(L * 0.02, D * 0.38, B * 0.44, '#16324d', L * 0.07, cubierta + D * 0.72, 0, 0.8);
+    parabrisas.rotation.z = -0.55;
+    // T-top: 4 postes y techo
+    for (const [dx, dz] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) {
+      const poste = new THREE.Mesh(new THREE.CylinderGeometry(L * 0.006, L * 0.006, D * 1.5, 6), new THREE.MeshStandardMaterial({ color: c('#d7dee5'), metalness: 0.3, roughness: 0.3 }));
+      poste.position.set(-L * 0.02 + dx * L * 0.1, cubierta + D * 0.75, dz * B * 0.27); grupo.add(poste);
+    }
+    caja(L * 0.3, D * 0.07, B * 0.72, colorFranja, -L * 0.02, cubierta + D * 1.5, 0);
+    // asiento y motores fuera de borda
+    caja(L * 0.08, D * 0.3, B * 0.4, '#e9eef2', -L * 0.17, cubierta + D * 0.15, 0);
+    for (const z of [-B * 0.14, B * 0.14]) {
+      caja(L * 0.07, D * 0.6, B * 0.13, '#1c2733', -L / 2 - L * 0.03, D * 0.5, z);
+      caja(L * 0.035, D * 0.9, B * 0.06, '#111820', -L / 2 - L * 0.04, -D * 0.2, z);
+    }
+    return grupo;
+  }
+
+  function montar(div) {
+    const fondo = div.dataset.fondo || '#0d78bd';
+    const cuantas = Number(div.dataset.lanchas || 1);
+    const atras = document.createElement('canvas'), gl = document.createElement('canvas'), delante = document.createElement('canvas');
+    div.append(atras, gl, delante);
+    const cA = atras.getContext('2d'), cD = delante.getContext('2d');
+    const capasD = capasDelante(fondo);
+    let ancho = 0, alto = 0, dpr = 1;
+
+    // Three.js: cámara ortográfica en píxeles (y hacia arriba), luz de sol
+    let render = null, escena, camara, barcos = [];
+    if (hayWebGL && window.THREE) {
+      render = new THREE.WebGLRenderer({ canvas: gl, alpha: true, antialias: true });
+      render.outputEncoding = THREE.sRGBEncoding;
+      escena = new THREE.Scene();
+      camara = new THREE.OrthographicCamera(0, 1, 1, 0, -3000, 3000);
+      escena.add(new THREE.HemisphereLight(0xffffff, 0x8fc8ea, 0.75));
+      const sol = new THREE.DirectionalLight(0xfff4e0, 0.9); sol.position.set(-0.6, 1, 0.9); escena.add(sol);
+      // lanchas: [tamaño relativo, color de la franja, velocidad px/s, capa de ola, sentido, fase]
+      const tipos = [[1, '#ff8a2a', 230, 1, 1, 0.15], [0.68, '#7ff0e6', 170, 0, 1, 0.62], [0.55, '#ef4444', 130, 0, -1, 0.4]].slice(0, cuantas);
+      barcos = tipos.map(([tam, color, vel, capa, sentido, fase]) => {
+        const exterior = new THREE.Group(), balanceo = new THREE.Group();
+        exterior.rotation.order = 'XYZ';
+        const modelo = lancha(100, color);
+        balanceo.add(modelo); exterior.add(balanceo); escena.add(exterior);
+        return { exterior, balanceo, tam, vel, capa, sentido, fase, x: 0, espuma: [] };
+      });
+    }
+
+    function medir() {
+      const r = div.getBoundingClientRect();
+      ancho = r.width; alto = r.height; dpr = Math.min(devicePixelRatio || 1, 2);
+      for (const cv of [atras, delante]) { cv.width = ancho * dpr; cv.height = alto * dpr; cv.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0); }
+      if (render) {
+        render.setPixelRatio(dpr); render.setSize(ancho, alto, false);
+        camara.right = ancho; camara.top = alto; camara.updateProjectionMatrix();
+        const escalaBase = Math.max(0.55, Math.min(1.25, ancho / 1100)) * 1.9; // ~190 px de eslora en escritorio
+        barcos.forEach((b, i) => {
+          b.oculta = ancho < 600 && i === 2; // en el móvil, solo 2 lanchas (si no, se amontonan)
+          b.exterior.visible = !b.oculta;
+          b.escala = escalaBase * b.tam;
+          b.exterior.scale.setScalar(b.escala);
+          if (!b.x) b.x = ancho * b.fase;
+        });
+      }
+    }
+
+    let ultimo = performance.now(), t = 0;
+    function cuadro(ahora) {
+      const dt = Math.min(0.05, (ahora - ultimo) / 1000); ultimo = ahora; t += dt;
+      cA.clearRect(0, 0, ancho, alto); cD.clearRect(0, 0, ancho, alto);
+      pintarCapas(cA, capasAtras, ancho, alto, t);
+
+      for (const b of barcos) {
+        if (b.oculta) continue;
+        const L = 100 * b.escala;
+        b.x += b.vel * b.sentido * dt * Math.max(0.6, ancho / 1200);
+        if (b.sentido > 0 && b.x > ancho + L) b.x = -L;
+        if (b.sentido < 0 && b.x < -L) b.x = ancho + L;
+        const capa = capasAtras[b.capa];
+        const y = alturaOla(capa, b.x, t, alto);
+        const pendiente = (alturaOla(capa, b.x + 8, t, alto) - alturaOla(capa, b.x - 8, t, alto)) / 16;
+        // posición (y hacia arriba en Three.js), la línea de flotación un poco bajo la superficie
+        b.exterior.position.set(b.x, alto - y - L * 0.05, b.capa === 0 ? -200 : 0);
+        // vista: un poco desde arriba y de tres cuartos; cabeceo con la ola + proa levantada al planear
+        b.exterior.rotation.x = 0.42;
+        b.exterior.rotation.y = b.sentido > 0 ? -0.55 : Math.PI + 0.55;
+        b.exterior.rotation.z = (-Math.atan(pendiente) * b.sentido) * 0.9 + 0.09 + Math.sin(t * 3.1 + b.fase * 9) * 0.025;
+        b.balanceo.rotation.x = Math.sin(t * 2.3 + b.fase * 7) * 0.06;
+
+        // estela en el agua (detrás de la lancha) y espuma que salta en la popa
+        const popa = b.x - b.sentido * L * 0.48, agua = y + 4;
+        cA.save(); cA.lineCap = 'round';
+        for (let j = 1; j < 26; j++) {
+          const px = popa - b.sentido * j * L * 0.07, abre = j * L * 0.012;
+          const yy = alturaOla(capa, px, t, alto) + 3;
+          cA.globalAlpha = 0.75 * (1 - j / 26);
+          cA.fillStyle = '#ffffff';
+          cA.beginPath(); cA.ellipse(px, yy + abre * 0.25, L * 0.05 + abre, 2.2 + abre * 0.18, 0, 0, Math.PI * 2); cA.fill();
+        }
+        cA.restore();
+        if (!quieto) for (let k = 0; k < 4; k++) b.espuma.push({
+          x: popa + (Math.random() - 0.5) * L * 0.1, y: agua - 2,
+          vx: -b.sentido * (40 + Math.random() * 90), vy: -(30 + Math.random() * 70), vida: 1, r: 1 + Math.random() * 2.4,
+        });
+        b.espuma = b.espuma.filter((p) => (p.vida -= dt * 1.4) > 0);
+        for (const p of b.espuma) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 160 * dt; }
+      }
+      if (render) render.render(escena, camara);
+
+      pintarCapas(cD, capasD, ancho, alto, t);
+      // espuma por delante del agua
+      cD.fillStyle = '#ffffff';
+      for (const b of barcos) for (const p of b.espuma) { cD.globalAlpha = p.vida * 0.9; cD.beginPath(); cD.arc(p.x, p.y, p.r, 0, Math.PI * 2); cD.fill(); }
+      cD.globalAlpha = 1;
+    }
+
+    // Para revisar: dibuja el segundo "seg" y devuelve una imagen con los 3 lienzos juntos.
+    div.foto = (seg) => {
+      t = seg; ultimo = performance.now(); cuadro(ultimo);
+      const f = document.createElement('canvas'); f.width = atras.width; f.height = atras.height;
+      const c = f.getContext('2d'); c.fillStyle = '#189fdc'; c.fillRect(0, 0, f.width, f.height); c.drawImage(atras, 0, 0); c.drawImage(gl, 0, 0, f.width, f.height); c.drawImage(delante, 0, 0);
+      return f;
+    };
+    medir();
+    new ResizeObserver(() => { medir(); if (quieto) cuadro(performance.now()); }).observe(div);
+    if (quieto) { cuadro(performance.now()); return; }
+    // solo se anima cuando se ve (ahorra batería)
+    let visible = false, pedido = 0;
+    const bucle = (ahora) => { if (!visible) return; cuadro(ahora); pedido = requestAnimationFrame(bucle); };
+    new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+      if (visible) { ultimo = performance.now(); cancelAnimationFrame(pedido); pedido = requestAnimationFrame(bucle); }
+    }).observe(div);
+  }
+
+  document.querySelectorAll('.mar-vivo').forEach(montar);
+})();
 </script>
 
 </body>
