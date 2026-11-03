@@ -99,9 +99,10 @@
 <script>
 // Comunidad web de NautikNav: la MISMA base de datos que la app (Supabase). Las reglas de seguridad están en el servidor.
 const sb = supabase.createClient('https://koddsyiellxgdfhfmfqz.supabase.co', 'sb_publishable_j7f-vceUGS36pXBTp8EIHw_sZw7ZB9a');
-const CAMPOS = 'id, tipo, titulo, texto, lat, lon, camino, foto_url, creado_en, autor, perfiles!publicaciones_autor_fkey(nombre, foto_url), me_gusta(usuario), comentarios(count)';
+const CAMPOS = 'id, tipo, titulo, texto, lat, lon, camino, foto_url, especie, peso_lb, creado_en, autor, perfiles!publicaciones_autor_fkey(nombre, foto_url), me_gusta(usuario), comentarios(count)';
 const TIPOS = {
-  pesca: { color: '#0EA5A4', es: 'Pesca', en: 'Fishing', ico: '🎣' },
+  captura: { color: '#2563EB', es: 'Mi captura', en: 'My catch', ico: '🐟' },
+  pesca: { color: '#0EA5A4', es: 'Sitio de pesca', en: 'Fishing spot', ico: '🎣' },
   peligro: { color: '#EF4444', es: 'Peligro', en: 'Hazard', ico: '⚠️' },
   lugar: { color: '#7C3AED', es: 'Lugar', en: 'Place', ico: '📍' },
   ruta: { color: '#F59E0B', es: 'Ruta', en: 'Route', ico: '🧭' },
@@ -248,10 +249,15 @@ async function pantallaInicio() {
   } catch (e) { fallo(e); }
 }
 
+// Captura: "🐟 Snook · 8.5 lb".
+const datoCaptura = (p) => p.tipo === 'captura' && (p.especie || p.peso_lb)
+  ? `<div><b>🐟 ${esc([p.especie, p.peso_lb ? p.peso_lb + ' lb' : null].filter(Boolean).join(' · '))}</b></div>` : '';
+
 function tarjetaPub(p) {
   return `<article class="tarjeta pub" onclick="ir('#pub/${p.id}')">
     <div class="cab">${avatar(p.perfiles)}<div class="txt"><div class="titulo">${esc(p.titulo)}</div><div class="meta">${esc(p.perfiles?.nombre)} · ${hace(p.creado_en)}</div></div>${tipoBadge(p.tipo)}</div>
     ${p.foto_url ? `<img class="foto" src="${esc(p.foto_url)}" alt="" loading="lazy">` : ''}
+    ${datoCaptura(p)}
     ${p.texto ? `<p class="meta">${esc(p.texto).slice(0, 220)}</p>` : ''}
     <div class="meta">♥ ${p.me_gusta?.length ?? 0} &nbsp; 💬 ${p.comentarios?.[0]?.count ?? 0}</div>
   </article>`;
@@ -274,6 +280,7 @@ async function pantallaPub(id) {
           <div class="cab"><a href="#perfil/${p.autor}">${avatar(p.perfiles)}</a><div class="txt"><h2 style="font-size:24px">${esc(p.titulo)}</h2>
             <div class="meta"><a href="#perfil/${p.autor}">${esc(p.perfiles?.nombre)}</a> · ${hace(p.creado_en)}</div></div>${tipoBadge(p.tipo)}</div>
           ${p.foto_url ? `<img class="foto" src="${esc(p.foto_url)}" alt="">` : ''}
+          ${datoCaptura(p)}
           ${p.texto ? `<p style="white-space:pre-wrap">${esc(p.texto)}</p>` : ''}
           <div class="meta">${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}</div>
           <div class="fila">
@@ -443,11 +450,15 @@ function pantallaEditar() {
 function pantallaNueva() {
   if (!yo) return ir('#entrar');
   if (!perfil?.acepto_reglas_en) return ir('#reglas');
-  let tipo = 'pesca', punto = null, foto = null;
+  let tipo = 'captura', punto = null, foto = null;
   app.innerHTML = `<button class="volver" onclick="ir('#')">← ${T('Comunidad', 'Community')}</button>
   <div class="tarjeta" style="max-width:640px;margin:0 auto;display:grid;gap:14px">
     <h2>${T('Publicar', 'New post')}</h2>
     <div class="chips" id="tipos"></div>
+    <div class="fila" id="campos-captura" style="flex-wrap:nowrap">
+      <label style="flex:2">${T('Pescado (especie)', 'Fish (species)')}<input id="especie" maxlength="60" placeholder="Snook, Mahi…"></label>
+      <label style="flex:1">${T('Peso (lb)', 'Weight (lb)')}<input id="peso" inputmode="decimal" maxlength="6"></label>
+    </div>
     <label>${T('Título', 'Title')}<input id="titulo" maxlength="80"></label>
     <label>${T('Cuéntalo (opcional)', 'Tell us more (optional)')}<textarea id="texto" maxlength="1000"></textarea></label>
     <label>${T('Foto (opcional)', 'Photo (optional)')}<input type="file" id="archivo" accept="image/*"></label>
@@ -456,7 +467,10 @@ function pantallaNueva() {
     <div id="mapa-elegir"></div>
     <button class="boton" id="publicar">${T('Publicar', 'Post')}</button>
   </div>`;
-  const pintarTipos = () => { document.getElementById('tipos').innerHTML = Object.keys(TIPOS).map((k) => `<button class="chip" data-k="${k}" aria-pressed="${tipo === k}">${TIPOS[k].ico} ${T(TIPOS[k].es, TIPOS[k].en)}</button>`).join(''); };
+  const pintarTipos = () => {
+    document.getElementById('tipos').innerHTML = Object.keys(TIPOS).map((k) => `<button class="chip" data-k="${k}" aria-pressed="${tipo === k}">${TIPOS[k].ico} ${T(TIPOS[k].es, TIPOS[k].en)}</button>`).join('');
+    document.getElementById('campos-captura').hidden = tipo !== 'captura';
+  };
   pintarTipos();
   document.getElementById('tipos').onclick = (ev) => { const k = ev.target.closest('[data-k]')?.dataset.k; if (k) { tipo = k; pintarTipos(); } };
   const m = L.map('mapa-elegir').setView([25.6, -80.3], 9);
@@ -468,11 +482,13 @@ function pantallaNueva() {
     try { foto = await subirFoto(f); document.getElementById('vista-foto').innerHTML = `<img class="foto" src="${esc(foto)}" alt="">`; } catch (e) { fallo(e); }
   };
   document.getElementById('publicar').onclick = async () => {
-    const titulo = document.getElementById('titulo').value.trim();
+    const especie = tipo === 'captura' ? document.getElementById('especie').value.trim() : '';
+    const peso = tipo === 'captura' ? parseFloat(document.getElementById('peso').value.replace(',', '.')) || null : null;
+    const titulo = document.getElementById('titulo').value.trim() || especie;
     if (titulo.length < 2) return alert(T('Escribe un título.', 'Write a title.'));
     if (!punto) return alert(T('Toca en el mapa el sitio.', 'Click the spot on the map.'));
     try {
-      const p = datos(await sb.from('publicaciones').insert({ tipo, titulo, texto: document.getElementById('texto').value.trim() || null, lat: punto.lat, lon: punto.lng, foto_url: foto }).select('id').single());
+      const p = datos(await sb.from('publicaciones').insert({ tipo, titulo, texto: document.getElementById('texto').value.trim() || null, lat: punto.lat, lon: punto.lng, foto_url: foto, especie: especie || null, peso_lb: peso }).select('id').single());
       ir('#pub/' + p.id);
     } catch (e) { fallo(e); }
   };
