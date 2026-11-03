@@ -99,7 +99,7 @@
 <script>
 // Comunidad web de NautikNav: la MISMA base de datos que la app (Supabase). Las reglas de seguridad están en el servidor.
 const sb = supabase.createClient('https://koddsyiellxgdfhfmfqz.supabase.co', 'sb_publishable_j7f-vceUGS36pXBTp8EIHw_sZw7ZB9a');
-const CAMPOS = 'id, tipo, titulo, texto, lat, lon, camino, foto_url, especie, peso_lb, creado_en, autor, perfiles!publicaciones_autor_fkey(nombre, foto_url), me_gusta(usuario), comentarios(count)';
+const CAMPOS = 'id, tipo, titulo, texto, lat, lon, camino, foto_url, especie, peso_lb, estado, creado_en, autor, perfiles!publicaciones_autor_fkey(nombre, foto_url), me_gusta(usuario), comentarios(count)';
 const TIPOS = {
   captura: { color: '#2563EB', es: 'Mi captura', en: 'My catch', ico: '🐟' },
   pesca: { color: '#0EA5A4', es: 'Sitio de pesca', en: 'Fishing spot', ico: '🎣' },
@@ -108,6 +108,8 @@ const TIPOS = {
   ruta: { color: '#F59E0B', es: 'Ruta', en: 'Route', ico: '🧭' },
   error: { color: '#F97316', es: 'Error en el tramo', en: 'Error on this stretch', ico: '🐞' },
 };
+const AHORA = { lleno: ['🔴', 'Lleno', 'Packed'], espacio: ['🟢', 'Hay espacio', 'Plenty of room'], rampaLlena: ['🅿️', 'Rampa o parqueo lleno', 'Ramp or parking full'], aguaTurbia: ['🟤', 'Agua turbia', 'Murky water'], olas: ['🌊', 'Mucho viento u olas', 'Strong wind or waves'], trafico: ['🚤', 'Mucho tráfico de barcos', 'Heavy boat traffic'] };
+const estadoAhora = (e) => { const x = AHORA[e] || ['⚡', e, e]; return x[0] + ' ' + T(x[1], x[2]); };
 const app = document.getElementById('app');
 let yo = null, perfil = null, filtroTipo = null, mapa = null;
 
@@ -209,6 +211,7 @@ async function pantallaInicio() {
         <a class="boton sec" href="#envivo"><span class="vivo-dot"></span> ${T('Mapa en vivo', 'Live map')}</a>
         <button class="boton" onclick="ir(yo ? (perfil?.acepto_reglas_en ? '#nueva' : '#reglas') : '#entrar')">＋ ${T('Publicar', 'Post')}</button>
       </div>
+      <div class="tarjeta" id="ahora" style="display:grid;gap:8px"></div>
       <div class="chips" id="filtros"></div>
       <div class="lista" id="lista"><p class="vacio">…</p></div>
     </div>
@@ -226,7 +229,7 @@ async function pantallaInicio() {
 
   try {
     let q = sb.from('publicaciones').select(CAMPOS).order('creado_en', { ascending: false }).limit(100);
-    if (filtroTipo) q = q.eq('tipo', filtroTipo);
+    if (filtroTipo) q = q.eq('tipo', filtroTipo); else q = q.neq('tipo', 'ahora');
     const pubs = datos(await q);
     document.getElementById('lista').innerHTML = pubs.length ? pubs.map(tarjetaPub).join('') : `<p class="vacio">${T('Todavía no hay publicaciones. ¡Sé el primero!', 'No posts yet. Be the first!')}</p>`;
     const puntos = [];
@@ -236,6 +239,11 @@ async function pantallaInicio() {
         .bindPopup(`<b>${esc(p.titulo)}</b><br>${esc(p.perfiles?.nombre)}<br><a href="#pub/${p.id}">${T('Ver', 'Open')}</a>`);
       puntos.push([p.lat, p.lon]);
     });
+    const ahora = datos(await sb.from('publicaciones').select(CAMPOS).eq('tipo', 'ahora').gte('creado_en', new Date(Date.now() - 6 * 3600000).toISOString()).order('creado_en', { ascending: false }));
+    document.getElementById('ahora').innerHTML = `<h3 style="font-size:17px">⚡ ${T('Ahora en el agua (últimas 6 h)', 'On the water now (last 6 h)')}</h3>` +
+      (ahora.length ? ahora.map((a) => `<a href="#pub/${a.id}" style="text-decoration:none;color:#fff"><b>${estadoAhora(a.estado)}</b> · ${esc(a.titulo)} <span class="meta">· ${hace(a.creado_en)}</span></a>`).join('<br>')
+        : `<p class="meta">${T('Sin avisos ahora. Desde la app: Comunidad → ⚡ Avisar.', 'No reports right now. From the app: Community → ⚡ Report.')}</p>`);
+    ahora.forEach((a) => L.marker([a.lat, a.lon], { icon: L.divIcon({ className: '', html: `<div style="font-size:22px">${(AHORA[a.estado] || ['⚡'])[0]}</div>`, iconSize: [26, 26] }) }).addTo(mapa).bindPopup(`<b>${estadoAhora(a.estado)}</b><br>${esc(a.titulo)}<br>${hace(a.creado_en)}`));
     const vivos = datos(await sb.from('en_vivo').select('usuario, lat, lon, actualizado_en, perfiles(nombre, foto_url, barco_nombre)').eq('publico', true).order('actualizado_en', { ascending: false }));
     vivos.forEach((v) => {
       L.circleMarker([v.lat, v.lon], { radius: 10, color: '#fff', weight: 3, fillColor: '#34d399', fillOpacity: 1 }).addTo(mapa)
@@ -280,7 +288,7 @@ async function pantallaPub(id) {
           <div class="cab"><a href="#perfil/${p.autor}">${avatar(p.perfiles)}</a><div class="txt"><h2 style="font-size:24px">${esc(p.titulo)}</h2>
             <div class="meta"><a href="#perfil/${p.autor}">${esc(p.perfiles?.nombre)}</a> · ${hace(p.creado_en)}</div></div>${tipoBadge(p.tipo)}</div>
           ${p.foto_url ? `<img class="foto" src="${esc(p.foto_url)}" alt="">` : ''}
-          ${datoCaptura(p)}
+          ${p.tipo === 'ahora' ? `<div><b>${estadoAhora(p.estado)}</b></div>` : ''}${datoCaptura(p)}
           ${p.texto ? `<p style="white-space:pre-wrap">${esc(p.texto)}</p>` : ''}
           <div class="meta">${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}</div>
           <div class="fila">
@@ -510,7 +518,12 @@ async function pantallaEnVivo() {
   let primera = true;
   async function refrescar() {
     try {
-      const vivos = datos(await sb.from('en_vivo').select('usuario, lat, lon, rumbo, velocidad, camino, actualizado_en, perfiles(nombre, foto_url, barco_nombre)').eq('publico', true));
+      const ahora = datos(await sb.from('publicaciones').select(CAMPOS).eq('tipo', 'ahora').gte('creado_en', new Date(Date.now() - 6 * 3600000).toISOString()).order('creado_en', { ascending: false }));
+    document.getElementById('ahora').innerHTML = `<h3 style="font-size:17px">⚡ ${T('Ahora en el agua (últimas 6 h)', 'On the water now (last 6 h)')}</h3>` +
+      (ahora.length ? ahora.map((a) => `<a href="#pub/${a.id}" style="text-decoration:none;color:#fff"><b>${estadoAhora(a.estado)}</b> · ${esc(a.titulo)} <span class="meta">· ${hace(a.creado_en)}</span></a>`).join('<br>')
+        : `<p class="meta">${T('Sin avisos ahora. Desde la app: Comunidad → ⚡ Avisar.', 'No reports right now. From the app: Community → ⚡ Report.')}</p>`);
+    ahora.forEach((a) => L.marker([a.lat, a.lon], { icon: L.divIcon({ className: '', html: `<div style="font-size:22px">${(AHORA[a.estado] || ['⚡'])[0]}</div>`, iconSize: [26, 26] }) }).addTo(mapa).bindPopup(`<b>${estadoAhora(a.estado)}</b><br>${esc(a.titulo)}<br>${hace(a.creado_en)}`));
+    const vivos = datos(await sb.from('en_vivo').select('usuario, lat, lon, rumbo, velocidad, camino, actualizado_en, perfiles(nombre, foto_url, barco_nombre)').eq('publico', true));
       capa.clearLayers();
       vivos.forEach((v) => {
         if (v.camino?.length > 1) L.polyline([[v.lat, v.lon], ...v.camino], { color: '#ff8a2a', weight: 3, opacity: 0.7, dashArray: '6 6' }).addTo(capa);
