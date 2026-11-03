@@ -30,6 +30,7 @@
 <div class="arriba">
   <div><span class="punto" id="punto"></span><b id="nombre">NautikNav</b></div>
   <div class="meta" id="estado">…</div>
+  <div id="plan" class="meta" hidden></div>
 </div>
 <div id="mapa"></div>
 <div class="abajo">
@@ -81,6 +82,21 @@ async function refrescar() {
   if (camino) camino.remove();
   if (v.camino?.length > 1) camino = L.polyline([[v.lat, v.lon], ...v.camino], { color: '#ff8a2a', weight: 4, dashArray: '6 6' }).addTo(mapa);
   if (primera) { mapa.setView([v.lat, v.lon], 13); primera = false; }
+  pintarPlan();
+}
+
+// Plan de salida: a dónde va y a qué hora vuelve; en rojo si ya pasó la hora.
+async function pintarPlan() {
+  const { data } = await sb.rpc('ver_plan', { c: codigo });
+  const p = data?.[0], caja = document.getElementById('plan');
+  if (!p) { caja.hidden = true; return; }
+  const vuelta = new Date(p.vuelta_en), tarde = Date.now() > vuelta.getTime();
+  const h = vuelta.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  caja.hidden = false;
+  caja.style.color = tarde ? '#ff5a5f' : '';
+  caja.innerHTML = (tarde ? '⚠️ ' : '🧭 ') + T('Destino: ', 'Destination: ') + '<b>' + p.destino.replace(/[<>&]/g, '') + '</b> · '
+    + T('vuelve a las ', 'back at ') + '<b>' + h + '</b>' + (p.personas ? ' · ' + p.personas + T(' a bordo', ' on board') : '')
+    + (tarde ? '<br><b>' + T('Ya pasó su hora de vuelta. Intenta llamarle; si no contesta, Guardia Costera (305) 535-4472 o 911.', 'Past their return time. Try calling; if no answer, Coast Guard (305) 535-4472 or 911.') + '</b>' : '');
 }
 refrescar();
 setInterval(refrescar, 20000);
