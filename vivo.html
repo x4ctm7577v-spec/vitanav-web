@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NautikNav en vivo</title>
+<meta name="description" content="Sigue en vivo por dónde navega tu familiar con NautikNav.">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root { --fondo: #0a3a66; --aqua: #7ff0e6; --verde: #34d399; --suave: #bcd6ee; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--fondo); color: #fff; font: 16px/1.5 "Plus Jakarta Sans", system-ui, sans-serif; }
+  body { display: flex; flex-direction: column; }
+  .arriba { padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top)); background: rgba(8,50,90,0.95); border-bottom: 1px solid rgba(255,255,255,0.2); }
+  .arriba b { font-size: 18px; }
+  .meta { color: var(--suave); font-size: 14px; }
+  .punto { width: 10px; height: 10px; border-radius: 50%; background: var(--verde); display: inline-block; box-shadow: 0 0 0 4px rgba(52,211,153,0.25); margin-right: 6px; }
+  #mapa { flex: 1; }
+  .abajo { padding: 10px 16px; padding-bottom: max(10px, env(safe-area-inset-bottom)); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; background: rgba(8,50,90,0.95); }
+  .boton { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px; background: var(--aqua); color: #05325a; font-weight: 800; text-decoration: none; }
+  a { color: var(--aqua); }
+</style>
+</head>
+<body>
+<div class="arriba">
+  <div><span class="punto" id="punto"></span><b id="nombre">NautikNav</b></div>
+  <div class="meta" id="estado">…</div>
+</div>
+<div id="mapa"></div>
+<div class="abajo">
+  <span class="meta" id="coords"></span>
+  <a class="boton" id="abrir" href="#" target="_blank" rel="noopener">Abrir en Mapas</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// Página para la familia: con el código del enlace (?c=...) se ve la posición en vivo, sin cuenta. Se actualiza cada 20 s.
+const sb = supabase.createClient('https://koddsyiellxgdfhfmfqz.supabase.co', 'sb_publishable_j7f-vceUGS36pXBTp8EIHw_sZw7ZB9a');
+const en = !navigator.language.startsWith('es');
+const T = (es, ing) => en ? ing : es;
+document.documentElement.lang = en ? 'en' : 'es';
+document.getElementById('abrir').textContent = T('Abrir en Mapas', 'Open in Maps');
+const codigo = new URLSearchParams(location.search).get('c');
+const mapa = L.map('mapa').setView([25.6, -80.3], 9);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(mapa);
+let barco = null, camino = null, primera = true;
+
+function hace(f) {
+  const s = Math.round((Date.now() - new Date(f)) / 1000);
+  if (s < 90) return T(`hace ${s} s`, `${s} s ago`);
+  const m = Math.round(s / 60);
+  return m < 60 ? T(`hace ${m} min`, `${m} min ago`) : T(`hace ${Math.round(m / 60)} h`, `${Math.round(m / 60)} h ago`);
+}
+
+async function refrescar() {
+  if (!codigo) { document.getElementById('estado').textContent = T('Enlace incompleto.', 'Incomplete link.'); return; }
+  const { data, error } = await sb.rpc('ver_en_vivo', { c: codigo });
+  const v = data?.[0];
+  if (error || !v) {
+    document.getElementById('estado').textContent = T('Ya no está compartiendo su posición.', 'Not sharing their position anymore.');
+    document.getElementById('punto').style.background = '#999';
+    return;
+  }
+  const viejo = Date.now() - new Date(v.actualizado_en) > 5 * 60000;
+  document.getElementById('punto').style.background = viejo ? '#fbbf24' : '#34d399';
+  document.getElementById('nombre').textContent = v.nombre + (v.barco ? ' · ' + v.barco : '');
+  const nudos = v.velocidad != null ? `${(v.velocidad * 1.94384).toFixed(1)} kn · ` : '';
+  document.getElementById('estado').textContent = nudos + T('actualizado ', 'updated ') + hace(v.actualizado_en) +
+    (viejo ? T(' (puede que no tenga cobertura)', ' (may be out of coverage)') : '');
+  document.getElementById('coords').textContent = `${v.lat.toFixed(5)}, ${v.lon.toFixed(5)}`;
+  document.getElementById('abrir').href = `https://maps.apple.com/?ll=${v.lat},${v.lon}&q=${encodeURIComponent(v.nombre)}`;
+  const icono = L.divIcon({ className: '', iconSize: [40, 40], iconAnchor: [20, 20],
+    html: `<div style="transform:rotate(${v.rumbo ?? 0}deg);font-size:32px;line-height:40px;text-align:center;color:#34d399;text-shadow:0 0 4px #000">➤</div>` });
+  if (barco) barco.setLatLng([v.lat, v.lon]).setIcon(icono); else barco = L.marker([v.lat, v.lon], { icon: icono }).addTo(mapa);
+  if (camino) camino.remove();
+  if (v.camino?.length > 1) camino = L.polyline([[v.lat, v.lon], ...v.camino], { color: '#ff8a2a', weight: 4, dashArray: '6 6' }).addTo(mapa);
+  if (primera) { mapa.setView([v.lat, v.lon], 13); primera = false; }
+}
+refrescar();
+setInterval(refrescar, 20000);
+</script>
+</body>
+</html>

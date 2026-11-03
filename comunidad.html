@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Comunidad NautikNav</title>
+<meta name="description" content="La comunidad de NautikNav: lugares de pesca, peligros, rutas y barcos en vivo en Florida. La misma comunidad que en la app.">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root {
+    --fondo: #0a3a66; --fondo-2: #0c4a80; --tarjeta: rgba(255,255,255,0.08); --tarjeta-2: rgba(255,255,255,0.14);
+    --hilo: rgba(255,255,255,0.22); --texto: #fff; --suave: #bcd6ee; --aqua: #7ff0e6; --tinta: #05325a;
+    --rojo: #ff5a5f; --verde: #34d399; --naranja: #f97316;
+    --f-display: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui, sans-serif;
+    --f-texto: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: linear-gradient(180deg, #0f5c99 0%, var(--fondo) 40%); background-attachment: fixed; color: var(--texto); font: 16px/1.55 var(--f-texto); min-height: 100vh; }
+  body:not(.en) [lang="en"], body.en [lang="es"] { display: none !important; }
+  a { color: var(--aqua); }
+  h1, h2, h3 { font-family: var(--f-display); letter-spacing: -0.03em; margin: 0; }
+  p { margin: 0; }
+  :focus-visible { outline: 3px solid var(--aqua); outline-offset: 2px; border-radius: 8px; }
+  .barra { position: sticky; top: 0; z-index: 1000; background: rgba(8, 50, 90, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--hilo); }
+  .barra .in { max-width: 1180px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
+  .marca { font: 800 19px var(--f-display); color: #fff; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+  .marca b { color: var(--aqua); font-weight: 800; }
+  .barra .esp { flex: 1; }
+  .idiomas { display: flex; background: rgba(255,255,255,0.1); border-radius: 999px; padding: 3px; }
+  .idiomas button { border: 0; background: none; color: var(--suave); font: 700 13px var(--f-texto); padding: 5px 10px; border-radius: 999px; cursor: pointer; }
+  .idiomas button[aria-pressed="true"] { background: #fff; color: var(--tinta); }
+  .yo { display: flex; align-items: center; gap: 8px; background: none; border: 0; color: #fff; cursor: pointer; font: 600 14px var(--f-texto); padding: 0; }
+  main { max-width: 1180px; margin: 0 auto; padding: 20px 16px 80px; }
+  .rejilla { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .rejilla { grid-template-columns: 1fr; } .lateral { order: -1; } }
+  .tarjeta { background: var(--tarjeta); border: 1px solid var(--hilo); border-radius: 20px; padding: 16px; }
+  .lista { display: grid; gap: 12px; }
+  .pub { cursor: pointer; display: grid; gap: 10px; transition: background .15s; }
+  .pub:hover { background: var(--tarjeta-2); }
+  .cab { display: flex; align-items: center; gap: 10px; }
+  .cab .txt { flex: 1; min-width: 0; }
+  .titulo { font-weight: 800; font-size: 17px; }
+  .meta { color: var(--suave); font-size: 13px; }
+  .tipo { display: inline-flex; align-items: center; gap: 4px; font: 700 12px var(--f-texto); padding: 3px 10px; border-radius: 999px; color: #fff; }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--aqua); color: var(--tinta); display: grid; place-items: center; font-weight: 800; flex: none; }
+  .avatar.g { width: 96px; height: 96px; font-size: 38px; }
+  .foto { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 14px; background: rgba(255,255,255,0.06); }
+  .boton { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 18px; border-radius: 999px;
+    font: 700 15px var(--f-texto); cursor: pointer; border: 1px solid transparent; background: var(--aqua); color: var(--tinta); text-decoration: none; }
+  .boton.sec { background: transparent; color: #fff; border-color: var(--hilo); }
+  .boton.peligro { background: transparent; color: var(--rojo); border-color: rgba(255,90,95,0.5); }
+  .boton:disabled { opacity: .5; cursor: default; }
+  .fila { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--hilo); background: transparent; color: #fff; border-radius: 999px; padding: 7px 14px; font: 700 14px var(--f-texto); cursor: pointer; }
+  .chip[aria-pressed="true"] { background: var(--aqua); color: var(--tinta); border-color: var(--aqua); }
+  label { display: grid; gap: 6px; font-weight: 600; font-size: 14px; color: var(--suave); }
+  input, textarea, select { font: 16px var(--f-texto); color: #fff; background: rgba(255,255,255,0.08); border: 1px solid var(--hilo); border-radius: 12px; padding: 11px 14px; width: 100%; }
+  textarea { min-height: 90px; resize: vertical; }
+  #mapa { height: 460px; border-radius: 20px; border: 1px solid var(--hilo); }
+  #mapa-elegir { height: 300px; border-radius: 14px; border: 1px solid var(--hilo); }
+  @media (max-width: 900px) { #mapa { height: 300px; } }
+  .seccion { font: 700 12px var(--f-texto); letter-spacing: .12em; color: var(--suave); text-transform: uppercase; margin: 8px 4px 0; }
+  .comentario { display: flex; gap: 10px; }
+  .comentario.resp { margin-left: 28px; }
+  .vacio { color: var(--suave); text-align: center; padding: 30px 10px; }
+  .volver { background: none; border: 0; color: var(--aqua); font: 700 15px var(--f-texto); cursor: pointer; padding: 8px 0; }
+  .aviso { background: rgba(255,90,95,0.15); border: 1px solid rgba(255,90,95,0.4); border-radius: 14px; padding: 10px 14px; }
+  .vivo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--verde); box-shadow: 0 0 0 4px rgba(52,211,153,0.25); display: inline-block; }
+  .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #0c4a80; color: #fff; }
+  .leaflet-container a.leaflet-popup-close-button { color: #fff; }
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: grid; place-items: center; z-index: 2000; padding: 16px; }
+  .modal .tarjeta { background: #0c4a80; max-width: 460px; width: 100%; display: grid; gap: 12px; max-height: 90vh; overflow: auto; }
+</style>
+</head>
+<body>
+<header class="barra">
+  <div class="in">
+    <a class="marca" href="index.html">⚓ Nautik<b>Nav</b></a>
+    <span class="meta"><span lang="es">Comunidad</span><span lang="en">Community</span></span>
+    <span class="esp"></span>
+    <div class="idiomas" role="group" aria-label="Idioma / Language">
+      <button type="button" id="btn-es" aria-pressed="true">ES</button>
+      <button type="button" id="btn-en" aria-pressed="false">EN</button>
+    </div>
+    <div id="zona-yo"></div>
+  </div>
+</header>
+
+<main id="app"><p class="vacio">…</p></main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// Comunidad web de NautikNav: la MISMA base de datos que la app (Supabase). Las reglas de seguridad están en el servidor.
+const sb = supabase.createClient('https://koddsyiellxgdfhfmfqz.supabase.co', 'sb_publishable_j7f-vceUGS36pXBTp8EIHw_sZw7ZB9a');
+const CAMPOS = 'id, tipo, titulo, texto, lat, lon, camino, foto_url, creado_en, autor, perfiles!publicaciones_autor_fkey(nombre, foto_url), me_gusta(usuario), comentarios(count)';
+const TIPOS = {
+  pesca: { color: '#0EA5A4', es: 'Pesca', en: 'Fishing', ico: '🎣' },
+  peligro: { color: '#EF4444', es: 'Peligro', en: 'Hazard', ico: '⚠️' },
+  lugar: { color: '#7C3AED', es: 'Lugar', en: 'Place', ico: '📍' },
+  ruta: { color: '#F59E0B', es: 'Ruta', en: 'Route', ico: '🧭' },
+  error: { color: '#F97316', es: 'Error en el tramo', en: 'Error on this stretch', ico: '🐞' },
+};
+const app = document.getElementById('app');
+let yo = null, perfil = null, filtroTipo = null, mapa = null;
+
+// ── Idioma (el mismo que la página principal) ──
+let idioma = 'es';
+try { idioma = localStorage.getItem('vitanav-idioma') || (navigator.language.startsWith('es') ? 'es' : 'en'); } catch (e) { /* sin almacenamiento */ }
+function ponerIdioma(i) {
+  idioma = i; document.body.classList.toggle('en', i === 'en'); document.documentElement.lang = i;
+  document.getElementById('btn-es').setAttribute('aria-pressed', i === 'es');
+  document.getElementById('btn-en').setAttribute('aria-pressed', i === 'en');
+  try { localStorage.setItem('vitanav-idioma', i); } catch (e) { /* sin almacenamiento */ }
+}
+document.getElementById('btn-es').onclick = () => { ponerIdioma('es'); ruta(); };
+document.getElementById('btn-en').onclick = () => { ponerIdioma('en'); ruta(); };
+ponerIdioma(idioma);
+const T = (es, en) => idioma === 'en' ? en : es;
+
+// ── Utilidades ──
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function avatar(p, g) {
+  const cls = 'avatar' + (g ? ' g' : '');
+  return p?.foto_url ? `<img class="${cls}" src="${esc(p.foto_url)}" alt="">` : `<span class="${cls}">${esc((p?.nombre || '?').charAt(0).toUpperCase())}</span>`;
+}
+function hace(f) {
+  const m = Math.round((Date.now() - new Date(f)) / 60000);
+  if (m < 60) return T(`hace ${Math.max(1, m)} min`, `${Math.max(1, m)} min ago`);
+  if (m < 1440) return T(`hace ${Math.round(m / 60)} h`, `${Math.round(m / 60)} h ago`);
+  return T(`hace ${Math.round(m / 1440)} d`, `${Math.round(m / 1440)} d ago`);
+}
+const tipoBadge = (t) => { const x = TIPOS[t] || TIPOS.lugar; return `<span class="tipo" style="background:${x.color}">${x.ico} ${T(x.es, x.en)}</span>`; };
+function fallo(e) { alert(T('No se pudo conectar: ', 'Could not connect: ') + (e?.message || e)); }
+function datos({ data, error }) { if (error) throw error; return data; }
+const ir = (h) => { location.hash = h; };
+
+// ── Cuenta ──
+async function cargarYo() {
+  const { data } = await sb.auth.getSession();
+  yo = data.session?.user ?? null;
+  perfil = yo ? datos(await sb.from('perfiles').select('*').eq('id', yo.id).maybeSingle()) : null;
+  document.getElementById('zona-yo').innerHTML = yo && perfil
+    ? `<button class="yo" onclick="ir('#perfil/${yo.id}')">${avatar(perfil)}<span>${esc(perfil.nombre)}</span></button>`
+    : `<button class="boton" style="min-height:36px" onclick="ir('#entrar')">${T('Entrar', 'Sign in')}</button>`;
+}
+sb.auth.onAuthStateChange(() => { cargarYo().then(ruta).catch(fallo); });
+
+function pantallaEntrar() {
+  app.innerHTML = `<div class="tarjeta" style="max-width:460px;margin:30px auto;display:grid;gap:14px">
+    <h2>${T('Entra en la comunidad', 'Join the community')}</h2>
+    <p class="meta">${T('La misma cuenta que en la app. Te mandamos un código de 6 dígitos al correo, sin contraseña.', 'Same account as in the app. We email you a 6-digit code, no password.')}</p>
+    <label>${T('Tu correo', 'Your email')}<input id="correo" type="email" autocomplete="email"></label>
+    <div id="paso2" hidden style="display:grid;gap:14px">
+      <p class="meta">${T('Mira tu correo (y el correo no deseado).', 'Check your email (and spam).')}</p>
+      <label>${T('Código', 'Code')}<input id="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="8"></label>
+    </div>
+    <button class="boton" id="enviar">${T('Enviarme un código', 'Send me a code')}</button>
+  </div>`;
+  let enviado = false;
+  document.getElementById('enviar').onclick = async (ev) => {
+    const correo = document.getElementById('correo').value.trim().toLowerCase();
+    ev.target.disabled = true;
+    try {
+      if (!enviado) {
+        datos(await sb.auth.signInWithOtp({ email: correo, options: { shouldCreateUser: true } }));
+        enviado = true; document.getElementById('paso2').hidden = false; document.getElementById('correo').disabled = true;
+        ev.target.textContent = T('Entrar', 'Sign in');
+      } else {
+        datos(await sb.auth.verifyOtp({ email: correo, token: document.getElementById('codigo').value.trim(), type: 'email' }));
+        await cargarYo(); ir(perfil?.acepto_reglas_en ? '#' : '#reglas');
+      }
+    } catch (e) { alert(enviado ? T('El código no es correcto o caducó.', 'The code is wrong or expired.') : e.message); }
+    ev.target.disabled = false;
+  };
+}
+
+function pantallaReglas() {
+  const reglas = T(['Respeto: nada de insultos, acoso ni odio.', 'Nada de contenido sexual, violento o ilegal.', 'Sin spam ni publicidad.', 'Comparte información honesta: otros navegan con ella.', 'No publiques datos personales de otras personas.'],
+    ['Be respectful: no insults, harassment or hate.', 'No sexual, violent or illegal content.', 'No spam or advertising.', 'Share honest information: others navigate with it.', 'Don’t post other people’s personal data.']);
+  app.innerHTML = `<div class="tarjeta" style="max-width:520px;margin:30px auto;display:grid;gap:14px">
+    <h2>${T('Reglas de la comunidad', 'Community rules')}</h2>
+    <ul>${reglas.map((r) => `<li>${r}</li>`).join('')}</ul>
+    <p class="meta">${T('Lo que no cumpla se borra y quien lo publique puede perder la cuenta. Puedes reportar o bloquear a cualquiera.', 'Content that breaks the rules is removed and its author may lose their account. You can report or block anyone.')}</p>
+    <label>${T('Tu nombre en la comunidad', 'Your community name')}<input id="nombre" maxlength="30"></label>
+    <button class="boton" id="aceptar">${T('Acepto las reglas', 'I accept the rules')}</button>
+  </div>`;
+  document.getElementById('aceptar').onclick = async () => {
+    const nombre = document.getElementById('nombre').value.trim();
+    if (nombre.length < 2) return;
+    try { datos(await sb.from('perfiles').upsert({ id: yo.id, nombre, acepto_reglas_en: new Date().toISOString() })); await cargarYo(); ir('#'); } catch (e) { fallo(e); }
+  };
+}
+
+// ── Inicio: lista + mapa (con barcos en vivo) ──
+async function pantallaInicio() {
+  app.innerHTML = `<div class="rejilla">
+    <div style="display:grid;gap:14px">
+      <div class="fila" style="justify-content:space-between">
+        <h1 style="font-size:30px">${T('Comunidad', 'Community')}</h1>
+        <span class="esp" style="flex:1"></span>
+        <a class="boton sec" href="#envivo"><span class="vivo-dot"></span> ${T('Mapa en vivo', 'Live map')}</a>
+        <button class="boton" onclick="ir(yo ? (perfil?.acepto_reglas_en ? '#nueva' : '#reglas') : '#entrar')">＋ ${T('Publicar', 'Post')}</button>
+      </div>
+      <div class="chips" id="filtros"></div>
+      <div class="lista" id="lista"><p class="vacio">…</p></div>
+    </div>
+    <aside class="lateral" style="display:grid;gap:12px;position:sticky;top:76px">
+      <div id="mapa"></div>
+      <div class="tarjeta" id="vivos"><p class="meta">…</p></div>
+      <div class="tarjeta meta">${T('¿Navegas? Descarga la app para publicar desde el agua y compartir tu ruta en vivo.', 'On the water? Get the app to post from your boat and share your route live.')} <a href="index.html#descargar">${T('Descargar', 'Download')}</a></div>
+    </aside>
+  </div>`;
+  document.getElementById('filtros').innerHTML = [null, ...Object.keys(TIPOS)].map((k) =>
+    `<button class="chip" aria-pressed="${filtroTipo === k}" onclick="filtroTipo=${k ? `'${k}'` : 'null'};pantallaInicio()">${k ? TIPOS[k].ico + ' ' + T(TIPOS[k].es, TIPOS[k].en) : T('Todo', 'All')}</button>`).join('');
+
+  mapa = L.map('mapa').setView([25.6, -80.3], 9);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(mapa);
+
+  try {
+    let q = sb.from('publicaciones').select(CAMPOS).order('creado_en', { ascending: false }).limit(100);
+    if (filtroTipo) q = q.eq('tipo', filtroTipo);
+    const pubs = datos(await q);
+    document.getElementById('lista').innerHTML = pubs.length ? pubs.map(tarjetaPub).join('') : `<p class="vacio">${T('Todavía no hay publicaciones. ¡Sé el primero!', 'No posts yet. Be the first!')}</p>`;
+    const puntos = [];
+    pubs.forEach((p) => {
+      const x = TIPOS[p.tipo] || TIPOS.lugar;
+      L.circleMarker([p.lat, p.lon], { radius: 8, color: '#fff', weight: 2, fillColor: x.color, fillOpacity: 1 }).addTo(mapa)
+        .bindPopup(`<b>${esc(p.titulo)}</b><br>${esc(p.perfiles?.nombre)}<br><a href="#pub/${p.id}">${T('Ver', 'Open')}</a>`);
+      puntos.push([p.lat, p.lon]);
+    });
+    const vivos = datos(await sb.from('en_vivo').select('usuario, lat, lon, actualizado_en, perfiles(nombre, foto_url, barco_nombre)').eq('publico', true).order('actualizado_en', { ascending: false }));
+    vivos.forEach((v) => {
+      L.circleMarker([v.lat, v.lon], { radius: 10, color: '#fff', weight: 3, fillColor: '#34d399', fillOpacity: 1 }).addTo(mapa)
+        .bindPopup(`<b>🟢 ${esc(v.perfiles?.nombre)}</b><br>${hace(v.actualizado_en)}<br><a href="#perfil/${v.usuario}">${T('Perfil', 'Profile')}</a>`);
+      puntos.push([v.lat, v.lon]);
+    });
+    document.getElementById('vivos').innerHTML = `<h3 style="font-size:17px;margin-bottom:8px"><span class="vivo-dot"></span> ${T('Navegando ahora', 'On the water now')}</h3>` +
+      (vivos.length ? vivos.map((v) => `<div class="cab" style="margin-top:8px">${avatar(v.perfiles)}<div class="txt"><a href="#perfil/${v.usuario}">${esc(v.perfiles?.nombre)}</a><div class="meta">${esc(v.perfiles?.barco_nombre || '')} · ${hace(v.actualizado_en)}</div></div></div>`).join('')
+        : `<p class="meta">${T('Nadie está compartiendo en vivo ahora mismo.', 'Nobody is sharing live right now.')}</p>`);
+    if (puntos.length) mapa.fitBounds(puntos, { padding: [30, 30], maxZoom: 12 });
+  } catch (e) { fallo(e); }
+}
+
+function tarjetaPub(p) {
+  return `<article class="tarjeta pub" onclick="ir('#pub/${p.id}')">
+    <div class="cab">${avatar(p.perfiles)}<div class="txt"><div class="titulo">${esc(p.titulo)}</div><div class="meta">${esc(p.perfiles?.nombre)} · ${hace(p.creado_en)}</div></div>${tipoBadge(p.tipo)}</div>
+    ${p.foto_url ? `<img class="foto" src="${esc(p.foto_url)}" alt="" loading="lazy">` : ''}
+    ${p.texto ? `<p class="meta">${esc(p.texto).slice(0, 220)}</p>` : ''}
+    <div class="meta">♥ ${p.me_gusta?.length ?? 0} &nbsp; 💬 ${p.comentarios?.[0]?.count ?? 0}</div>
+  </article>`;
+}
+
+// ── Publicación con comentarios y respuestas ──
+let respondiendo = null;
+async function pantallaPub(id) {
+  try {
+    const p = datos(await sb.from('publicaciones').select(CAMPOS).eq('id', id).maybeSingle());
+    if (!p) { app.innerHTML = `<p class="vacio">${T('Esta publicación ya no existe.', 'This post no longer exists.')}</p>`; return; }
+    const coms = datos(await sb.from('comentarios').select('id, texto, creado_en, autor, respuesta_a, perfiles!comentarios_autor_fkey(nombre, foto_url)').eq('publicacion', id).order('creado_en'));
+    const nombreDe = (cid) => coms.find((c) => c.id === cid)?.perfiles?.nombre;
+    const meGusta = yo && p.me_gusta.some((g) => g.usuario === yo.id);
+    const mapaApple = `https://maps.apple.com/?ll=${p.lat},${p.lon}&q=${encodeURIComponent(p.titulo)}`;
+    app.innerHTML = `<button class="volver" onclick="ir('#')">← ${T('Comunidad', 'Community')}</button>
+    <div class="rejilla">
+      <div style="display:grid;gap:14px">
+        <article class="tarjeta" style="display:grid;gap:12px">
+          <div class="cab"><a href="#perfil/${p.autor}">${avatar(p.perfiles)}</a><div class="txt"><h2 style="font-size:24px">${esc(p.titulo)}</h2>
+            <div class="meta"><a href="#perfil/${p.autor}">${esc(p.perfiles?.nombre)}</a> · ${hace(p.creado_en)}</div></div>${tipoBadge(p.tipo)}</div>
+          ${p.foto_url ? `<img class="foto" src="${esc(p.foto_url)}" alt="">` : ''}
+          ${p.texto ? `<p style="white-space:pre-wrap">${esc(p.texto)}</p>` : ''}
+          <div class="meta">${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}</div>
+          <div class="fila">
+            <button class="boton sec" id="gusto">${meGusta ? '♥' : '♡'} ${p.me_gusta.length}</button>
+            <a class="boton sec" href="${mapaApple}" target="_blank" rel="noopener">${T('Abrir en Mapas', 'Open in Maps')}</a>
+            <button class="boton sec" id="compartir">${T('Compartir', 'Share')}</button>
+            ${yo ? (p.autor === yo.id ? `<button class="boton peligro" id="borrar">${T('Borrar', 'Delete')}</button>` : `<button class="boton peligro" id="opciones">${T('Reportar / bloquear', 'Report / block')}</button>`) : ''}
+          </div>
+        </article>
+        <h3 class="seccion">${T('Comentarios', 'Comments')}</h3>
+        ${coms.length ? '' : `<p class="meta">${T('Sé el primero en comentar.', 'Be the first to comment.')}</p>`}
+        ${coms.map((c) => `<div class="tarjeta comentario${c.respuesta_a ? ' resp' : ''}">
+          <a href="#perfil/${c.autor}">${avatar(c.perfiles)}</a>
+          <div style="flex:1;display:grid;gap:2px">
+            <div><b>${esc(c.perfiles?.nombre)}</b> <span class="meta">· ${hace(c.creado_en)}</span></div>
+            ${c.respuesta_a && nombreDe(c.respuesta_a) ? `<div class="meta" style="color:var(--aqua)">↪ @${esc(nombreDe(c.respuesta_a))}</div>` : ''}
+            <p style="white-space:pre-wrap">${esc(c.texto)}</p>
+            <div class="fila">${yo ? `<button class="volver" style="font-size:13px" onclick="responderA(${c.id}, '${esc(c.perfiles?.nombre).replace(/'/g, '')}')">${T('Responder', 'Reply')}</button>` : ''}
+              ${yo && c.autor === yo.id ? `<button class="volver" style="font-size:13px;color:var(--rojo)" onclick="borrarComentario(${c.id}, ${id})">${T('Borrar', 'Delete')}</button>` : ''}
+              ${yo && c.autor !== yo.id ? `<button class="volver" style="font-size:13px;color:var(--suave)" onclick="opciones({comentario:${c.id}, autor:'${c.autor}'}, ${id})">${T('Reportar', 'Report')}</button>` : ''}</div>
+          </div></div>`).join('')}
+        ${yo ? `<div class="tarjeta" style="display:grid;gap:10px">
+          <div id="resp-a" class="meta" hidden></div>
+          <textarea id="texto" maxlength="500" placeholder="${T('Escribe un comentario', 'Write a comment')}"></textarea>
+          <button class="boton" id="comentar">${T('Comentar', 'Comment')}</button></div>`
+        : `<a class="boton" href="#entrar">${T('Entra para comentar', 'Sign in to comment')}</a>`}
+      </div>
+      <aside class="lateral"><div id="mapa"></div></aside>
+    </div>`;
+    mapa = L.map('mapa').setView([p.lat, p.lon], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(mapa);
+    L.circleMarker([p.lat, p.lon], { radius: 10, color: '#fff', weight: 3, fillColor: (TIPOS[p.tipo] || TIPOS.lugar).color, fillOpacity: 1 }).addTo(mapa);
+    if (p.camino?.length > 1) { const l = L.polyline(p.camino, { color: '#ff8a2a', weight: 4 }).addTo(mapa); mapa.fitBounds(l.getBounds(), { padding: [30, 30] }); }
+
+    document.getElementById('compartir').onclick = () => {
+      const url = location.href;
+      if (navigator.share) navigator.share({ title: p.titulo, url }).catch(() => {});
+      else navigator.clipboard?.writeText(url).then(() => alert(T('Enlace copiado', 'Link copied')));
+    };
+    document.getElementById('gusto').onclick = async () => {
+      if (!yo) return ir('#entrar');
+      try {
+        if (meGusta) datos(await sb.from('me_gusta').delete().eq('publicacion', id).eq('usuario', yo.id));
+        else datos(await sb.from('me_gusta').insert({ publicacion: id, usuario: yo.id }));
+        pantallaPub(id);
+      } catch (e) { fallo(e); }
+    };
+    const borrar = document.getElementById('borrar');
+    if (borrar) borrar.onclick = async () => { if (confirm(T('¿Borrar esta publicación?', 'Delete this post?'))) { try { datos(await sb.from('publicaciones').delete().eq('id', id)); ir('#'); } catch (e) { fallo(e); } } };
+    const opc = document.getElementById('opciones');
+    if (opc) opc.onclick = () => opciones({ publicacion: id, autor: p.autor });
+    const com = document.getElementById('comentar');
+    if (com) com.onclick = async () => {
+      const texto = document.getElementById('texto').value.trim();
+      if (!texto) return;
+      if (!perfil?.acepto_reglas_en) return ir('#reglas');
+      try { datos(await sb.from('comentarios').insert({ publicacion: id, texto, respuesta_a: respondiendo })); respondiendo = null; pantallaPub(id); } catch (e) { fallo(e); }
+    };
+  } catch (e) { fallo(e); }
+}
+function responderA(cid, nombre) {
+  respondiendo = cid;
+  const r = document.getElementById('resp-a'); r.hidden = false;
+  r.innerHTML = `${T('Respondiendo a', 'Replying to')} <b>${esc(nombre)}</b> · <a href="javascript:void 0" onclick="respondiendo=null;this.parentNode.hidden=true">${T('cancelar', 'cancel')}</a>`;
+  document.getElementById('texto').focus();
+}
+async function borrarComentario(cid, pid) {
+  if (!confirm(T('¿Borrar el comentario?', 'Delete comment?'))) return;
+  try { datos(await sb.from('comentarios').delete().eq('id', cid)); pantallaPub(pid); } catch (e) { fallo(e); }
+}
+// Reportar (con 3 reportes se esconde solo) o bloquear a la persona.
+async function opciones({ publicacion, comentario, autor }, volverA) {
+  const quiere = prompt(T('Escribe 1 para REPORTAR o 2 para BLOQUEAR a esta persona', 'Type 1 to REPORT or 2 to BLOCK this person'));
+  try {
+    if (quiere === '1') {
+      const { error } = await sb.from('reportes').insert({ publicacion: publicacion ?? null, comentario: comentario ?? null, motivo: 'web' });
+      if (error && error.code !== '23505') throw error;
+      alert(T('Gracias. Lo revisaremos en menos de 24 horas.', 'Thanks. We’ll review it within 24 hours.'));
+    } else if (quiere === '2') {
+      const { error } = await sb.from('bloqueos').insert({ bloqueado: autor });
+      if (error && error.code !== '23505') throw error;
+      alert(T('Ya no verás nada de esta persona.', 'You won’t see anything from this person anymore.'));
+      ir('#'); return;
+    }
+    if (volverA) pantallaPub(volverA);
+  } catch (e) { fallo(e); }
+}
+
+// ── Perfil ──
+async function pantallaPerfil(id) {
+  try {
+    const p = datos(await sb.from('perfiles').select('*').eq('id', id).maybeSingle());
+    if (!p) { app.innerHTML = `<p class="vacio">${T('Perfil no encontrado.', 'Profile not found.')}</p>`; return; }
+    const pubs = datos(await sb.from('publicaciones').select(CAMPOS).eq('autor', id).order('creado_en', { ascending: false }));
+    const vivo = datos(await sb.from('en_vivo').select('lat, lon, actualizado_en').eq('usuario', id).maybeSingle());
+    const mio = yo && yo.id === id;
+    app.innerHTML = `<button class="volver" onclick="ir('#')">← ${T('Comunidad', 'Community')}</button>
+    <div class="rejilla">
+      <div style="display:grid;gap:12px">
+        <h3 class="seccion">${T('Publicaciones', 'Posts')}</h3>
+        <div class="lista">${pubs.length ? pubs.map(tarjetaPub).join('') : `<p class="vacio">${T('Todavía no ha publicado nada.', 'Nothing posted yet.')}</p>`}</div>
+      </div>
+      <aside class="lateral tarjeta" style="display:grid;gap:12px;justify-items:center;text-align:center">
+        ${p.foto_url ? `<img class="foto" src="${esc(p.foto_url)}" alt="">` : avatar(p, true)}
+        <h2>${esc(p.nombre)}</h2>
+        ${p.barco_nombre || p.barco_tipo ? `<div>⛴ ${esc([p.barco_nombre, p.barco_tipo].filter(Boolean).join(' · '))}</div>` : ''}
+        ${p.bio ? `<p class="meta">${esc(p.bio)}</p>` : ''}
+        ${vivo ? `<div><span class="vivo-dot"></span> ${T('Navegando ahora', 'On the water now')} · ${hace(vivo.actualizado_en)}</div><div id="mapa" style="height:240px;width:100%"></div>` : ''}
+        ${mio ? `<button class="boton sec" onclick="ir('#editar')">${T('Editar mi perfil', 'Edit my profile')}</button>
+          <button class="boton sec" id="salir">${T('Cerrar sesión', 'Sign out')}</button>
+          <button class="volver" style="color:var(--rojo)" id="borrar-cuenta">${T('Borrar mi cuenta de la comunidad', 'Delete my community account')}</button>`
+        : yo ? `<button class="boton peligro" onclick="opciones({autor:'${id}'})">${T('Bloquear', 'Block')}</button>` : ''}
+      </aside>
+    </div>`;
+    if (vivo) {
+      mapa = L.map('mapa').setView([vivo.lat, vivo.lon], 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(mapa);
+      L.circleMarker([vivo.lat, vivo.lon], { radius: 10, color: '#fff', weight: 3, fillColor: '#34d399', fillOpacity: 1 }).addTo(mapa);
+    }
+    if (mio) {
+      document.getElementById('salir').onclick = async () => { await sb.auth.signOut(); ir('#'); };
+      document.getElementById('borrar-cuenta').onclick = async () => {
+        if (!confirm(T('Se borran tu perfil, publicaciones, comentarios y me gusta. No se puede deshacer. ¿Seguro?', 'Your profile, posts, comments and likes will be deleted. This cannot be undone. Sure?'))) return;
+        try { datos(await sb.rpc('borrar_mi_cuenta')); await sb.auth.signOut({ scope: 'local' }); ir('#'); } catch (e) { fallo(e); }
+      };
+    }
+  } catch (e) { fallo(e); }
+}
+
+// Subir una foto a mi carpeta del servidor (máx. ~5 MB).
+async function subirFoto(archivo) {
+  if (archivo.size > 5 * 1024 * 1024) throw new Error(T('La foto es muy grande (máx. 5 MB).', 'Photo is too large (max 5 MB).'));
+  const ext = archivo.type === 'image/png' ? 'png' : 'jpg';
+  const ruta = `${yo.id}/${Date.now()}.${ext}`;
+  datos(await sb.storage.from('fotos').upload(ruta, archivo, { contentType: archivo.type || 'image/jpeg' }));
+  return sb.storage.from('fotos').getPublicUrl(ruta).data.publicUrl;
+}
+
+function pantallaEditar() {
+  if (!yo) return ir('#entrar');
+  let foto = perfil.foto_url;
+  app.innerHTML = `<button class="volver" onclick="history.back()">← ${T('Volver', 'Back')}</button>
+  <div class="tarjeta" style="max-width:560px;margin:0 auto;display:grid;gap:14px">
+    <h2>${T('Editar mi perfil', 'Edit my profile')}</h2>
+    <div id="vista-foto">${foto ? `<img class="foto" src="${esc(foto)}" alt="">` : ''}</div>
+    <label>${T('Foto de tu barco', 'Photo of your boat')}<input type="file" id="archivo" accept="image/*"></label>
+    <label>${T('Tu nombre en la comunidad', 'Your community name')}<input id="nombre" maxlength="30" value="${esc(perfil.nombre)}"></label>
+    <label>${T('Nombre del barco', 'Boat name')}<input id="barco" maxlength="40" value="${esc(perfil.barco_nombre || '')}"></label>
+    <label>${T('Barco (marca y largo)', 'Boat (make and length)')}<input id="tipo" maxlength="40" value="${esc(perfil.barco_tipo || '')}"></label>
+    <label>${T('Sobre mí', 'About me')}<textarea id="bio" maxlength="300">${esc(perfil.bio || '')}</textarea></label>
+    <button class="boton" id="guardar">${T('Guardar', 'Save')}</button>
+  </div>`;
+  document.getElementById('archivo').onchange = async (ev) => {
+    const f = ev.target.files[0]; if (!f) return;
+    try { foto = await subirFoto(f); document.getElementById('vista-foto').innerHTML = `<img class="foto" src="${esc(foto)}" alt="">`; } catch (e) { fallo(e); }
+  };
+  document.getElementById('guardar').onclick = async () => {
+    const v = (i) => document.getElementById(i).value.trim() || null;
+    try {
+      datos(await sb.from('perfiles').update({ nombre: v('nombre'), foto_url: foto, barco_nombre: v('barco'), barco_tipo: v('tipo'), bio: v('bio') }).eq('id', yo.id));
+      await cargarYo(); ir('#perfil/' + yo.id);
+    } catch (e) { fallo(e); }
+  };
+}
+
+// ── Publicar (con foto y el sitio elegido en el mapa) ──
+function pantallaNueva() {
+  if (!yo) return ir('#entrar');
+  if (!perfil?.acepto_reglas_en) return ir('#reglas');
+  let tipo = 'pesca', punto = null, foto = null;
+  app.innerHTML = `<button class="volver" onclick="ir('#')">← ${T('Comunidad', 'Community')}</button>
+  <div class="tarjeta" style="max-width:640px;margin:0 auto;display:grid;gap:14px">
+    <h2>${T('Publicar', 'New post')}</h2>
+    <div class="chips" id="tipos"></div>
+    <label>${T('Título', 'Title')}<input id="titulo" maxlength="80"></label>
+    <label>${T('Cuéntalo (opcional)', 'Tell us more (optional)')}<textarea id="texto" maxlength="1000"></textarea></label>
+    <label>${T('Foto (opcional)', 'Photo (optional)')}<input type="file" id="archivo" accept="image/*"></label>
+    <div id="vista-foto"></div>
+    <div class="meta">${T('Toca en el mapa el sitio exacto.', 'Click the exact spot on the map.')}</div>
+    <div id="mapa-elegir"></div>
+    <button class="boton" id="publicar">${T('Publicar', 'Post')}</button>
+  </div>`;
+  const pintarTipos = () => { document.getElementById('tipos').innerHTML = Object.keys(TIPOS).map((k) => `<button class="chip" data-k="${k}" aria-pressed="${tipo === k}">${TIPOS[k].ico} ${T(TIPOS[k].es, TIPOS[k].en)}</button>`).join(''); };
+  pintarTipos();
+  document.getElementById('tipos').onclick = (ev) => { const k = ev.target.closest('[data-k]')?.dataset.k; if (k) { tipo = k; pintarTipos(); } };
+  const m = L.map('mapa-elegir').setView([25.6, -80.3], 9);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(m);
+  let marca = null;
+  m.on('click', (e) => { punto = e.latlng; if (marca) marca.setLatLng(punto); else marca = L.marker(punto).addTo(m); });
+  document.getElementById('archivo').onchange = async (ev) => {
+    const f = ev.target.files[0]; if (!f) return;
+    try { foto = await subirFoto(f); document.getElementById('vista-foto').innerHTML = `<img class="foto" src="${esc(foto)}" alt="">`; } catch (e) { fallo(e); }
+  };
+  document.getElementById('publicar').onclick = async () => {
+    const titulo = document.getElementById('titulo').value.trim();
+    if (titulo.length < 2) return alert(T('Escribe un título.', 'Write a title.'));
+    if (!punto) return alert(T('Toca en el mapa el sitio.', 'Click the spot on the map.'));
+    try {
+      const p = datos(await sb.from('publicaciones').insert({ tipo, titulo, texto: document.getElementById('texto').value.trim() || null, lat: punto.lat, lon: punto.lng, foto_url: foto }).select('id').single());
+      ir('#pub/' + p.id);
+    } catch (e) { fallo(e); }
+  };
+}
+
+// ── Mapa EN VIVO: todos los barcos de la comunidad que comparten su posición (se actualiza cada 20 s) ──
+let relojVivo = null;
+async function pantallaEnVivo() {
+  app.innerHTML = `<button class="volver" onclick="ir('#')">← ${T('Comunidad', 'Community')}</button>
+  <div class="fila" style="justify-content:space-between;margin-bottom:12px">
+    <h1 style="font-size:28px"><span class="vivo-dot"></span> ${T('En vivo ahora', 'Live now')}</h1>
+    <span class="meta" id="cuantos"></span>
+  </div>
+  <div id="mapa" style="height:calc(100vh - 200px);min-height:360px"></div>
+  <p class="meta" style="margin-top:10px">${T('Se actualiza solo cada 20 segundos. Para salir aquí, activa "Compartir mi ruta en vivo → Familia y comunidad" en la app.', 'Updates every 20 seconds. To appear here, turn on "Share my route live → Family and community" in the app.')}</p>`;
+  mapa = L.map('mapa').setView([25.6, -80.3], 9);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(mapa);
+  const capa = L.layerGroup().addTo(mapa);
+  let primera = true;
+  async function refrescar() {
+    try {
+      const vivos = datos(await sb.from('en_vivo').select('usuario, lat, lon, rumbo, velocidad, camino, actualizado_en, perfiles(nombre, foto_url, barco_nombre)').eq('publico', true));
+      capa.clearLayers();
+      vivos.forEach((v) => {
+        if (v.camino?.length > 1) L.polyline([[v.lat, v.lon], ...v.camino], { color: '#ff8a2a', weight: 3, opacity: 0.7, dashArray: '6 6' }).addTo(capa);
+        const nudos = v.velocidad != null ? (v.velocidad * 1.94384).toFixed(1) + ' kn · ' : '';
+        L.marker([v.lat, v.lon], { icon: L.divIcon({ className: '', iconSize: [34, 34], iconAnchor: [17, 17],
+          html: `<div style="transform:rotate(${v.rumbo ?? 0}deg);font-size:28px;line-height:34px;text-align:center;color:#34d399;text-shadow:0 0 4px #000">➤</div>` }) })
+          .addTo(capa).bindPopup(`<b>${esc(v.perfiles?.nombre)}</b>${v.perfiles?.barco_nombre ? '<br>⛴ ' + esc(v.perfiles.barco_nombre) : ''}<br>${nudos}${hace(v.actualizado_en)}<br><a href="#perfil/${v.usuario}">${T('Perfil', 'Profile')}</a>`);
+      });
+      document.getElementById('cuantos').textContent = T(`${vivos.length} barco(s) navegando`, `${vivos.length} boat(s) on the water`);
+      if (primera && vivos.length) mapa.fitBounds(vivos.map((v) => [v.lat, v.lon]), { padding: [40, 40], maxZoom: 12 });
+      primera = false;
+    } catch (e) { /* se reintenta en 20 s */ }
+  }
+  refrescar();
+  relojVivo = setInterval(refrescar, 20000);
+}
+
+// ── Rutas de la página (#, #pub/1, #perfil/uuid, #nueva, #editar, #entrar, #reglas) ──
+function ruta() {
+  if (mapa) { mapa.remove(); mapa = null; }
+  if (relojVivo) { clearInterval(relojVivo); relojVivo = null; }
+  const [pag, id] = location.hash.slice(1).split('/');
+  window.scrollTo(0, 0);
+  if (pag === 'entrar') return pantallaEntrar();
+  if (pag === 'reglas') return yo ? pantallaReglas() : pantallaEntrar();
+  if (pag === 'pub') return pantallaPub(Number(id));
+  if (pag === 'perfil') return pantallaPerfil(id);
+  if (pag === 'nueva') return pantallaNueva();
+  if (pag === 'editar') return pantallaEditar();
+  if (pag === 'envivo') return pantallaEnVivo();
+  return pantallaInicio();
+}
+window.addEventListener('hashchange', ruta);
+cargarYo().then(ruta).catch((e) => { fallo(e); ruta(); });
+</script>
+</body>
+</html>
