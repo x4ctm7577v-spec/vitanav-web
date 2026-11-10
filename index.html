@@ -110,6 +110,7 @@
   .boton.claro { background: var(--texto); color: var(--tinta); box-shadow: 0 12px 30px rgba(4, 50, 90, 0.25); }
   .boton.claro small, .boton.hilo small { display: block; font: 600 11px var(--f-texto); opacity: 0.65; }
   .boton.hilo { border-color: var(--hilo); color: var(--texto); background: rgba(255,255,255,0.03); }
+  .tarjeta-comunidad { display: flex; flex-wrap: wrap; align-items: center; gap: 20px 28px; padding: 24px; border-radius: 24px; background: rgba(255,255,255,0.12); border: 1px solid var(--hilo); }
   .puntos-heroe { list-style: none; padding: 0; margin: 4px 0 0; display: grid; gap: 8px; font-size: 17px; }
   .puntos-heroe li { display: flex; gap: 10px; align-items: baseline; }
   .puntos-heroe li::before { content: "✓"; color: var(--aqua); font-weight: 800; }
@@ -277,6 +278,8 @@
     .wpt .anillo { width: 22px; height: 22px; border-width: 3px; }
     .wpt .num { font-size: 9px; }
     .pildora { display: none; }
+    /* En el teléfono, el de la Comunidad sí se queda (pequeño): es el acceso rápido */
+    .pildora.ir-comunidad { display: inline-block; padding: 7px 12px; font-size: 13px; }
     .rrr { grid-template-columns: 1fr; }
   }
 </style>
@@ -296,7 +299,7 @@
         <button type="button" id="btn-es" aria-pressed="true">ES</button>
         <button type="button" id="btn-en" aria-pressed="false">EN</button>
       </div>
-      <a class="pildora" href="comunidad.html" style="background: transparent; color: #fff; border: 1px solid var(--hilo)"><span lang="es">Comunidad</span><span lang="en">Community</span></a>
+      <a class="pildora ir-comunidad" href="comunidad.html" style="background: transparent; color: #fff; border: 1px solid var(--hilo)"><span lang="es">Comunidad</span><span lang="en">Community</span></a>
       <a class="pildora" href="#descargar"><span lang="es">Descargar</span><span lang="en">Download</span></a>
     </div>
   </div>
@@ -397,6 +400,23 @@
       <img lang="en" src="captura-en-1.jpg" alt="Safe route on the NautikNav map" loading="lazy" width="540" height="1174">
       <img lang="en" src="captura-en-2.jpg" alt="NautikNav shoal alarm" loading="lazy" width="540" height="1174">
       <img lang="en" src="captura-en-3.jpg" alt="Channel marked buoy by buoy in NautikNav" loading="lazy" width="540" height="1174">
+    </div>
+  </div>
+</section>
+
+<!-- Acceso rápido a la Comunidad (su sección completa sigue más abajo) -->
+<section class="banda" id="ir-comunidad">
+  <div class="ancho" style="padding-block: 8px 40px">
+    <div class="tarjeta-comunidad">
+      <div style="flex: 1; min-width: 220px">
+        <span class="rotulo"><span lang="es">Comunidad</span><span lang="en">Community</span></span>
+        <h2 style="font-size: clamp(24px, 4vw, 32px); margin: 8px 0 6px"><span lang="es">Mira qué está pasando hoy en el agua.</span><span lang="en">See what’s happening on the water today.</span></h2>
+        <p class="niebla" style="margin: 0"><span lang="es">Rampas llenas, peligros, lugares de pesca y barcos navegando en vivo, contados por otros navegantes. Sin instalar nada.</span><span lang="en">Full ramps, hazards, fishing spots and boats sailing live, from other boaters. Nothing to install.</span></p>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap">
+        <a class="pildora" style="display: inline-block; font-size: 16px; padding: 13px 22px" href="comunidad.html"><span lang="es">Abrir la comunidad</span><span lang="en">Open the community</span></a>
+        <a class="pildora" style="display: inline-block; font-size: 16px; padding: 13px 22px; background: transparent; color: #fff; border: 1px solid var(--hilo)" href="comunidad.html#envivo"><span lang="es">● Mapa en vivo</span><span lang="en">● Live map</span></a>
+      </div>
     </div>
   </div>
 </section>
