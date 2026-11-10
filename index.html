@@ -110,6 +110,16 @@
   .boton.claro { background: var(--texto); color: var(--tinta); box-shadow: 0 12px 30px rgba(4, 50, 90, 0.25); }
   .boton.claro small, .boton.hilo small { display: block; font: 600 11px var(--f-texto); opacity: 0.65; }
   .boton.hilo { border-color: var(--hilo); color: var(--texto); background: rgba(255,255,255,0.03); }
+  .puntos-heroe { list-style: none; padding: 0; margin: 4px 0 0; display: grid; gap: 8px; font-size: 17px; }
+  .puntos-heroe li { display: flex; gap: 10px; align-items: baseline; }
+  .puntos-heroe li::before { content: "✓"; color: var(--aqua); font-weight: 800; }
+  .precio-corto { margin: 0; color: var(--niebla); font-size: 15px; font-weight: 600; }
+  .etiqueta-premium, .etiqueta-gratis { display: inline-block; vertical-align: middle; font: 700 11px var(--f-texto); letter-spacing: 0.04em; padding: 3px 9px; border-radius: 999px; margin-left: 6px; }
+  .etiqueta-premium { background: var(--aqua); color: var(--tinta); }
+  .etiqueta-gratis { background: rgba(255,255,255,0.18); color: #fff; }
+  .capturas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .capturas img { width: 100%; height: auto; border-radius: 22px; border: 1px solid var(--hilo); }
+  @media (max-width: 700px) { .capturas { grid-template-columns: repeat(3, 70%); overflow-x: auto; scroll-snap-type: x mandatory; } .capturas img { scroll-snap-align: start; } }
   .posicion { display: flex; flex-wrap: wrap; gap: 8px 18px; font: 500 13px var(--f-dato); color: var(--niebla); }
   .posicion b { color: var(--texto); font-weight: 700; }
 
@@ -309,20 +319,22 @@
         <span lang="en">Boat <span class="hueco">without fear</span> of <span class="naranja">running aground.</span></span>
       </h1>
       <p class="bajada">
-        <span lang="es">NautikNav traza la ruta segura para tu barco, te avisa 2 minutos antes de un bajo o una roca, te dice a qué velocidad ir y te guía con voz. Si estás empezando, es como llevar a un capitán al lado.</span>
-        <span lang="en">NautikNav plans the safe route for your boat, warns you 2 minutes before a shoal or a rock, tells you how fast to go and guides you by voice. If you are new to boating, it is like having a captain beside you.</span>
+        <span lang="es">Tu capitán de bolsillo para salir en lancha por Florida.</span>
+        <span lang="en">Your pocket captain for boating in Florida.</span>
       </p>
+      <ul class="puntos-heroe">
+        <li><span lang="es">Ruta segura según el calado de tu barco</span><span lang="en">A safe route for your boat’s draft</span></li>
+        <li><span lang="es">Alarma con voz antes de un bajo o una roca</span><span lang="en">A voice alarm before a shoal or a rock</span></li>
+        <li><span lang="es">Te guía con voz, como un GPS de carro</span><span lang="en">Voice guidance, like a car GPS</span></li>
+      </ul>
       <div class="acciones">
-        <a class="boton claro" href="#descargar">
+        <a class="boton claro" href="mailto:ivan.amg@icloud.com?subject=Av%C3%ADsame%20cuando%20salga%20NautikNav&body=Quiero%20saber%20cuando%20NautikNav%20est%C3%A9%20en%20la%20App%20Store.">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.8-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.8 1.2 1.8 2.6 3.1 2.5 1.3-.1 1.7-.8 3.3-.8 1.5 0 1.9.8 3.3.8 1.4 0 2.2-1.2 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-4.2zM13.9 5.2c.7-.8 1.1-2 1-3.2-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3.1 1.1.1 2.2-.6 2.9-1.4z"/></svg>
-          <span><small lang="es">Muy pronto</small><small lang="en">Coming soon</small>App Store</span>
+          <span><small lang="es">Muy pronto en la App Store</small><small lang="en">Coming soon to the App Store</small><span lang="es">Avísame cuando salga</span><span lang="en">Tell me when it’s out</span></span>
         </a>
         <a class="boton hilo" href="#demo"><span><small lang="es">Mira cómo funciona</small><small lang="en">See how it works</small><span lang="es">▶ Ver la demostración</span><span lang="en">▶ Watch the demo</span></span></a>
       </div>
-      <div class="posicion">
-        <span><b>25°32′N 080°19′W</b> Black Point</span>
-        <span><span lang="es">Calado</span><span lang="en">Draft</span> <b>3 ft</b> · <span lang="es">margen</span><span lang="en">margin</span> <b>2 ft</b></span>
-      </div>
+      <p class="precio-corto"><span lang="es">Gratis para empezar · 14 días de prueba de Premium</span><span lang="en">Free to start · 14-day Premium trial</span></p>
     </div>
 
     <div class="telefono" aria-label="NautikNav navegando por el canal de Black Point" role="img">
@@ -364,24 +376,30 @@
   <div class="mar-vivo" data-fondo="rgba(24,159,220,0.92)" data-lanchas="3" aria-hidden="true"></div>
 </section>
 
-<div class="cinta" aria-hidden="true">
-  <div class="pista">
-    <span><i>●</i>Black Point → Boca Chita <b>9.0 MN</b></span>
-    <span><i>●</i><span lang="es">Canal por balizas</span><span lang="en">Channel by markers</span> <b>13 <span lang="es">puertas</span><span lang="en">gates</span></b></span>
-    <span><i>●</i><span lang="es">Zona de manatíes</span><span lang="en">Manatee zone</span> <b><span lang="es">máx. 3 kn</span><span lang="en">max 3 kn</span></b></span>
-    <span><i>●</i><span lang="es">Marea</span><span lang="en">Tide</span> <b>+1.2 ft ↑</b></span>
-    <span><i>●</i><span lang="es">Viento</span><span lang="en">Wind</span> <b>12 kn NE</b></span>
-    <span><i>●</i><span lang="es">Roca más cercana</span><span lang="en">Nearest rock</span> <b>231 m</b></span>
-    <span><i>●</i><span lang="es">Cartas NOAA en la app</span><span lang="en">NOAA charts in-app</span> <b>170</b></span>
-    <span><i>●</i>Black Point → Boca Chita <b>9.0 MN</b></span>
-    <span><i>●</i><span lang="es">Canal por balizas</span><span lang="en">Channel by markers</span> <b>13 <span lang="es">puertas</span><span lang="en">gates</span></b></span>
-    <span><i>●</i><span lang="es">Zona de manatíes</span><span lang="en">Manatee zone</span> <b><span lang="es">máx. 3 kn</span><span lang="en">max 3 kn</span></b></span>
-    <span><i>●</i><span lang="es">Marea</span><span lang="en">Tide</span> <b>+1.2 ft ↑</b></span>
-    <span><i>●</i><span lang="es">Viento</span><span lang="en">Wind</span> <b>12 kn NE</b></span>
-    <span><i>●</i><span lang="es">Roca más cercana</span><span lang="en">Nearest rock</span> <b>231 m</b></span>
-    <span><i>●</i><span lang="es">Cartas NOAA en la app</span><span lang="en">NOAA charts in-app</span> <b>170</b></span>
+
+<!-- Lo que ganas -->
+<section class="banda" id="valor">
+  <div class="ancho" style="padding-block: 72px 24px; display: flex; flex-direction: column; gap: 32px">
+    <div class="cabeza">
+      <span class="rotulo"><span lang="es">Lo que ganas</span><span lang="en">What you get</span></span>
+      <h2><span lang="es">Más confianza en cada salida.</span><span lang="en">More confidence on every trip.</span></h2>
+    </div>
+    <div class="mosaico">
+      <article class="pieza a3"><h3><span lang="es">🧭 Ruta que evita peligros</span><span lang="en">🧭 Routes around hazards</span> <span class="etiqueta-premium">Premium</span></h3><p><span lang="es">Esquiva bajos, rocas y naufragios según el calado de tu lancha.</span><span lang="en">Avoids shoals, rocks and wrecks based on your boat’s draft.</span></p></article>
+      <article class="pieza a3"><h3><span lang="es">🌊 Alarma de bajos</span><span lang="en">🌊 Shoal alarm</span> <span class="etiqueta-premium">Premium</span></h3><p><span lang="es">Carta de NOAA más la marea de ahora: te avisa con voz antes de llegar al bajo.</span><span lang="en">NOAA chart plus the current tide: a voice warning before you reach the shoal.</span></p></article>
+      <article class="pieza a3"><h3><span lang="es">⛈️ Avisos oficiales del tiempo</span><span lang="en">⛈️ Official weather alerts</span> <span class="etiqueta-gratis"><span lang="es">Gratis</span><span lang="en">Free</span></span></h3><p><span lang="es">Radar de lluvia y avisos de tormenta para saber si hoy es buen día.</span><span lang="en">Rain radar and storm warnings so you know if today is a good day.</span></p></article>
+      <article class="pieza a3"><h3><span lang="es">👨‍👩‍👦 Tu familia tranquila</span><span lang="en">👨‍👩‍👦 Peace of mind at home</span> <span class="etiqueta-gratis"><span lang="es">Gratis</span><span lang="en">Free</span></span></h3><p><span lang="es">Te ven en vivo y reciben un aviso si no vuelves a tiempo.</span><span lang="en">They see you live and get an alert if you’re not back on time.</span></p></article>
+    </div>
+    <div class="capturas">
+      <img lang="es" src="captura-es-1.jpg" alt="Ruta segura en el mapa de NautikNav" loading="lazy" width="540" height="1174">
+      <img lang="es" src="captura-es-2.jpg" alt="Alarma de bajos de NautikNav" loading="lazy" width="540" height="1174">
+      <img lang="es" src="captura-es-3.jpg" alt="Canal marcado boya a boya en NautikNav" loading="lazy" width="540" height="1174">
+      <img lang="en" src="captura-en-1.jpg" alt="Safe route on the NautikNav map" loading="lazy" width="540" height="1174">
+      <img lang="en" src="captura-en-2.jpg" alt="NautikNav shoal alarm" loading="lazy" width="540" height="1174">
+      <img lang="en" src="captura-en-3.jpg" alt="Channel marked buoy by buoy in NautikNav" loading="lazy" width="540" height="1174">
+    </div>
   </div>
-</div>
+</section>
 
 <section class="demo banda" id="demo">
   <div class="ancho">
@@ -450,7 +468,7 @@
 
   <!-- 1. Antes de salir -->
   <section class="parada banda">
-    <div class="wpt"><span class="anillo"></span><span class="num">WPT 1</span></div>
+    <div class="wpt"><span class="anillo"></span><span class="num"><span lang="es">PASO 1</span><span lang="en">STEP 1</span></span></div>
     <div class="ancho">
       <div class="cabeza">
         <span class="rotulo"><span lang="es">Antes de salir</span><span lang="en">Before you go</span></span>
@@ -478,7 +496,7 @@
 
   <!-- 2. La salida -->
   <section class="parada banda">
-    <div class="wpt"><span class="anillo"></span><span class="num">WPT 2</span></div>
+    <div class="wpt"><span class="anillo"></span><span class="num"><span lang="es">PASO 2</span><span lang="en">STEP 2</span></span></div>
     <div class="ancho">
       <div class="cabeza">
         <span class="rotulo"><span lang="es">La salida</span><span lang="en">Leaving the dock</span></span>
@@ -515,7 +533,7 @@
 
   <!-- 3. En el agua -->
   <section class="parada banda">
-    <div class="wpt"><span class="anillo"></span><span class="num">WPT 3</span></div>
+    <div class="wpt"><span class="anillo"></span><span class="num"><span lang="es">PASO 3</span><span lang="en">STEP 3</span></span></div>
     <div class="ancho">
       <div class="cabeza">
         <span class="rotulo"><span lang="es">En el agua</span><span lang="en">On the water</span></span>
@@ -564,7 +582,7 @@
 
   <!-- 4. De vuelta -->
   <section class="parada banda">
-    <div class="wpt"><span class="anillo"></span><span class="num">WPT 4</span></div>
+    <div class="wpt"><span class="anillo"></span><span class="num"><span lang="es">PASO 4</span><span lang="en">STEP 4</span></span></div>
     <div class="ancho">
       <div class="cabeza">
         <span class="rotulo"><span lang="es">De vuelta</span><span lang="en">Heading home</span></span>
@@ -597,25 +615,6 @@
     </div>
   </section>
 
-  <!-- Lo que ganas -->
-  <section class="parada banda" id="valor">
-    <div class="wpt"><span class="anillo" style="border-color: var(--aqua); box-shadow: 0 0 0 6px rgba(127,240,230,0.15)"></span><span class="num" style="color: var(--aqua)">★</span></div>
-    <div class="ancho">
-      <div class="cabeza">
-        <span class="rotulo"><span lang="es">Lo que ganas</span><span lang="en">What you get</span></span>
-        <h2><span lang="es">Más confianza en cada salida.</span><span lang="en">More confidence on every trip.</span></h2>
-      </div>
-      <div class="mosaico">
-        <article class="pieza a2"><h3><span lang="es">🧭 Ruta que evita peligros</span><span lang="en">🧭 Routes around hazards</span></h3><p><span lang="es">Esquiva bajos, rocas y naufragios según el calado de tu lancha.</span><span lang="en">Avoids shoals, rocks and wrecks based on your boat’s draft.</span></p></article>
-        <article class="pieza a2"><h3><span lang="es">🌊 Profundidad con marea</span><span lang="en">🌊 Depth with tide</span></h3><p><span lang="es">Carta de NOAA más la marea de ahora, con alarma antes del bajo.</span><span lang="en">NOAA chart plus the current tide, with an alarm before the shoal.</span></p></article>
-        <article class="pieza a2"><h3><span lang="es">🌧️ Radar y alertas</span><span lang="en">🌧️ Radar and alerts</span></h3><p><span lang="es">Radar de lluvia en el mapa y avisos oficiales de tormenta para anticiparte.</span><span lang="en">Rain radar on the map and official storm warnings so you can get ahead of it.</span></p></article>
-        <article class="pieza a2"><h3><span lang="es">📍 Todos tus viajes</span><span lang="en">📍 All your trips</span></h3><p><span lang="es">Cada recorrido guardado solo, para repetir tus mejores salidas.</span><span lang="en">Every trip saved automatically, so you can repeat your best days.</span></p></article>
-        <article class="pieza a2"><h3><span lang="es">🎣 Dónde y cuándo pescar</span><span lang="en">🎣 Where and when to fish</span></h3><p><span lang="es">La mejor hora del día y dónde está pescando la comunidad.</span><span lang="en">The best time of day and where the community is catching fish.</span></p></article>
-        <article class="pieza a2"><h3><span lang="es">👨‍👩‍👦 Tranquilidad familiar</span><span lang="en">👨‍👩‍👦 Peace of mind at home</span></h3><p><span lang="es">Tu familia te ve en vivo y recibe un aviso si no vuelves a tiempo.</span><span lang="en">Your family sees you live and gets an alert if you’re not back on time.</span></p></article>
-        <article class="pieza a2"><h3><span lang="es">🚤 Rampas en vivo</span><span lang="en">🚤 Live ramp status</span></h3><p><span lang="es">Si la rampa está llena, cuánto hay que esperar y el precio de la gasolina, según otros navegantes.</span><span lang="en">Whether the ramp is full, how long the wait is and fuel prices, from other boaters.</span></p></article>
-      </div>
-    </div>
-  </section>
 
   <!-- Precios -->
   <section class="parada banda" id="precios">
@@ -634,7 +633,7 @@
             <li><span lang="es">Navegación con voz y viento en el mapa</span><span lang="en">Voice navigation and wind on the map</span></li>
             <li><span lang="es">Sandbars, marinas, faros y tus lugares</span><span lang="en">Sandbars, marinas, lighthouses and your places</span></li>
             <li><span lang="es">SOS, grúa de barco, alarma de ancla y radio VHF</span><span lang="en">SOS, boat towing, anchor alarm and VHF radio</span></li>
-            <li><span lang="es">Cartas NOAA sin internet</span><span lang="en">Offline NOAA charts</span></li>
+            <li><span lang="es">Cartas NOAA del sur de Florida sin internet</span><span lang="en">Offline NOAA charts for South Florida</span></li>
             <li><span lang="es">Comunidad y compartir en vivo</span><span lang="en">Community and live sharing</span></li>
           </ul>
         </article>
@@ -646,7 +645,7 @@
             <li><span lang="es">Ruta segura y profundidad por colores</span><span lang="en">Safe route and color-coded depth</span></li>
             <li><span lang="es">Alarma de bajos y rocas, y avisos de velocidad</span><span lang="en">Shoal and rock alarm, and speed alerts</span></li>
             <li><span lang="es">Pronóstico de 5 días, mareas, olas y corrientes</span><span lang="en">5-day forecast, tides, waves and currents</span></li>
-            <li><span lang="es">Cartas sin internet, satélite y recorridos</span><span lang="en">Offline charts, satellite and tracks</span></li>
+            <li><span lang="es">Descargar cartas de cualquier zona, satélite y recorridos</span><span lang="en">Download charts for any area, satellite and tracks</span></li>
             <li><span lang="es">Volver a la salida</span><span lang="en">Return to start</span></li>
           </ul>
         </article>
@@ -662,10 +661,10 @@
     <span class="rotulo"><span lang="es">Muy pronto en iPhone</span><span lang="en">Coming soon on iPhone</span></span>
     <h2><span lang="es">Suelta amarras.<br><span class="naranja">Nosotros vigilamos el fondo.</span></span><span lang="en">Cast off.<br><span class="naranja">We’ll watch the bottom.</span></span></h2>
     <p class="niebla" style="max-width: 36em; font-size: 18px"><span lang="es">NautikNav está en sus últimas pruebas en el agua de Biscayne Bay. Cuando salga en la App Store, este botón te llevará directo a la descarga.</span><span lang="en">NautikNav is in its final on-the-water tests in Biscayne Bay. When it launches on the App Store, this button will take you straight to the download.</span></p>
-    <span class="boton claro" role="img" aria-label="Muy pronto en la App Store / Coming soon on the App Store">
+    <a class="boton claro" href="mailto:ivan.amg@icloud.com?subject=Av%C3%ADsame%20cuando%20salga%20NautikNav&body=Quiero%20saber%20cuando%20NautikNav%20est%C3%A9%20en%20la%20App%20Store.">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.8-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.8 1.2 1.8 2.6 3.1 2.5 1.3-.1 1.7-.8 3.3-.8 1.5 0 1.9.8 3.3.8 1.4 0 2.2-1.2 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-4.2zM13.9 5.2c.7-.8 1.1-2 1-3.2-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3.1 1.1.1 2.2-.6 2.9-1.4z"/></svg>
-      <span><small lang="es">Muy pronto en la</small><small lang="en">Coming soon on the</small>App Store</span>
-    </span>
+      <span><small lang="es">Muy pronto en la App Store</small><small lang="en">Coming soon to the App Store</small><span lang="es">Avísame cuando salga</span><span lang="en">Tell me when it’s out</span></span>
+    </a>
   </div>
 </section>
 
