@@ -61,9 +61,16 @@ function hace(f) {
 
 async function refrescar() {
   if (!codigo) { document.getElementById('estado').textContent = T('Enlace incompleto.', 'Incomplete link.'); return; }
-  const { data, error } = await sb.rpc('ver_en_vivo', { c: codigo });
+  // Si falla la conexión de ESTE teléfono no se dice "ya no comparte" (asustaría a la familia sin motivo):
+  // se dice que no hay conexión y se vuelve a intentar a los 20 s.
+  const { data, error } = await sb.rpc('ver_en_vivo', { c: codigo }).then((r) => r, (e) => ({ error: e }));
+  if (error) {
+    document.getElementById('estado').textContent = T('Sin conexión. Reintentando…', 'No connection. Retrying…');
+    document.getElementById('punto').style.background = '#fbbf24';
+    return;
+  }
   const v = data?.[0];
-  if (error || !v) {
+  if (!v) {
     document.getElementById('estado').textContent = T('Ya no está compartiendo su posición.', 'Not sharing their position anymore.');
     document.getElementById('punto').style.background = '#999';
     return;
@@ -77,7 +84,7 @@ async function refrescar() {
   document.getElementById('coords').textContent = `${v.lat.toFixed(5)}, ${v.lon.toFixed(5)}`;
   document.getElementById('abrir').href = `https://maps.apple.com/?ll=${v.lat},${v.lon}&q=${encodeURIComponent(v.nombre)}`;
   const icono = L.divIcon({ className: '', iconSize: [40, 40], iconAnchor: [20, 20],
-    html: `<div style="transform:rotate(${v.rumbo ?? 0}deg);font-size:32px;line-height:40px;text-align:center;color:#34d399;text-shadow:0 0 4px #000">➤</div>` });
+    html: `<div style="transform:rotate(${Number(v.rumbo) || 0}deg);font-size:32px;line-height:40px;text-align:center;color:#34d399;text-shadow:0 0 4px #000">➤</div>` });
   if (barco) barco.setLatLng([v.lat, v.lon]).setIcon(icono); else barco = L.marker([v.lat, v.lon], { icon: icono }).addTo(mapa);
   if (camino) camino.remove();
   if (v.camino?.length > 1) camino = L.polyline([[v.lat, v.lon], ...v.camino], { color: '#ff8a2a', weight: 4, dashArray: '6 6' }).addTo(mapa);
@@ -87,7 +94,8 @@ async function refrescar() {
 
 // Plan de salida: a dónde va y a qué hora vuelve; en rojo si ya pasó la hora.
 async function pintarPlan() {
-  const { data } = await sb.rpc('ver_plan', { c: codigo });
+  const { data, error } = await sb.rpc('ver_plan', { c: codigo }).then((r) => r, (e) => ({ error: e }));
+  if (error) return; // sin conexión: se deja lo que ya se veía
   const p = data?.[0], caja = document.getElementById('plan');
   if (!p) { caja.hidden = true; return; }
   const vuelta = new Date(p.vuelta_en), tarde = Date.now() > vuelta.getTime();
@@ -95,7 +103,7 @@ async function pintarPlan() {
   caja.hidden = false;
   caja.style.color = tarde ? '#ff5a5f' : '';
   caja.innerHTML = (tarde ? '⚠️ ' : '🧭 ') + T('Destino: ', 'Destination: ') + '<b>' + p.destino.replace(/[<>&]/g, '') + '</b> · '
-    + T('vuelve a las ', 'back at ') + '<b>' + h + '</b>' + (p.personas ? ' · ' + p.personas + T(' a bordo', ' on board') : '')
+    + T('vuelve a las ', 'back at ') + '<b>' + h + '</b>' + (Number(p.personas) ? ' · ' + Number(p.personas) + T(' a bordo', ' on board') : '')
     + (tarde ? '<br><b>' + T('Ya pasó su hora de vuelta. Intenta llamarle; si no contesta, Guardia Costera (305) 535-4472 o 911.', 'Past their return time. Try calling; if no answer, Coast Guard (305) 535-4472 or 911.') + '</b>' : '');
 }
 refrescar();

@@ -108,8 +108,13 @@ const TIPOS = {
   ruta: { color: '#F59E0B', es: 'Ruta', en: 'Route', ico: '🧭' },
   error: { color: '#F97316', es: 'Error en el tramo', en: 'Error on this stretch', ico: '🐞' },
 };
-const AHORA = { lleno: ['🔴', 'Lleno', 'Packed'], espacio: ['🟢', 'Hay espacio', 'Plenty of room'], rampaLlena: ['🅿️', 'Rampa o parqueo lleno', 'Ramp or parking full'], aguaTurbia: ['🟤', 'Agua turbia', 'Murky water'], olas: ['🌊', 'Mucho viento u olas', 'Strong wind or waves'], trafico: ['🚤', 'Mucho tráfico de barcos', 'Heavy boat traffic'] };
-const estadoAhora = (e) => { const x = AHORA[e] || ['⚡', e, e]; return x[0] + ' ' + T(x[1], x[2]); };
+const AHORA = { lleno: ['🔴', 'Lleno', 'Packed'], espacio: ['🟢', 'Hay espacio', 'Plenty of room'], rampaLlena: ['🅿️', 'Rampa o parqueo lleno', 'Ramp or parking full'], aguaTurbia: ['🟤', 'Agua turbia', 'Murky water'], olas: ['🌊', 'Mucho viento u olas', 'Strong wind or waves'], trafico: ['🚤', 'Mucho tráfico de barcos', 'Heavy boat traffic'],
+  // Estados de rampa que se reportan desde la app ("Rampas cerca de ti")
+  rampaLibre: ['🟢', 'Rampa libre', 'Ramp clear'], espera15: ['🟡', 'Espera de unos 15 min', 'About a 15 min wait'], espera30: ['🟠', 'Espera de 30 min o más', '30+ min wait'], parqueoLleno: ['🅿️', 'Parqueo lleno', 'Parking full'], gasolina: ['⛽', 'Precio de gasolina', 'Fuel price'] };
+// El estado lo escribe quien publica: solo se aceptan los de la lista y, si llega otro, se muestra como TEXTO
+// (nunca como HTML: si no, alguien podría meter código en la página de los demás).
+const datoAhora = (e) => (Object.prototype.hasOwnProperty.call(AHORA, e) ? AHORA[e] : ['⚡', String(e ?? ''), String(e ?? '')]);
+const estadoAhora = (e) => { const x = datoAhora(e); return x[0] + ' ' + esc(T(x[1], x[2])); };
 const app = document.getElementById('app');
 let yo = null, perfil = null, filtroTipo = null, mapa = null;
 
@@ -243,7 +248,7 @@ async function pantallaInicio() {
     document.getElementById('ahora').innerHTML = `<h3 style="font-size:17px">⚡ ${T('Ahora en el agua (últimas 6 h)', 'On the water now (last 6 h)')}</h3>` +
       (ahora.length ? ahora.map((a) => `<a href="#pub/${a.id}" style="text-decoration:none;color:#fff"><b>${estadoAhora(a.estado)}</b> · ${esc(a.titulo)} <span class="meta">· ${hace(a.creado_en)}</span></a>`).join('<br>')
         : `<p class="meta">${T('Sin avisos ahora. Desde la app: Comunidad → ⚡ Avisar.', 'No reports right now. From the app: Community → ⚡ Report.')}</p>`);
-    ahora.forEach((a) => L.marker([a.lat, a.lon], { icon: L.divIcon({ className: '', html: `<div style="font-size:22px">${(AHORA[a.estado] || ['⚡'])[0]}</div>`, iconSize: [26, 26] }) }).addTo(mapa).bindPopup(`<b>${estadoAhora(a.estado)}</b><br>${esc(a.titulo)}<br>${hace(a.creado_en)}`));
+    ahora.forEach((a) => L.marker([a.lat, a.lon], { icon: L.divIcon({ className: '', html: `<div style="font-size:22px">${datoAhora(a.estado)[0]}</div>`, iconSize: [26, 26] }) }).addTo(mapa).bindPopup(`<b>${estadoAhora(a.estado)}</b><br>${esc(a.titulo)}<br>${hace(a.creado_en)}`));
     const vivos = datos(await sb.from('en_vivo').select('usuario, lat, lon, actualizado_en, perfiles(nombre, foto_url, barco_nombre)').eq('publico', true).order('actualizado_en', { ascending: false }));
     vivos.forEach((v) => {
       L.circleMarker([v.lat, v.lon], { radius: 10, color: '#fff', weight: 3, fillColor: '#34d399', fillOpacity: 1 }).addTo(mapa)
@@ -279,6 +284,7 @@ async function pantallaPub(id) {
     if (!p) { app.innerHTML = `<p class="vacio">${T('Esta publicación ya no existe.', 'This post no longer exists.')}</p>`; return; }
     const coms = datos(await sb.from('comentarios').select('id, texto, creado_en, autor, respuesta_a, perfiles!comentarios_autor_fkey(nombre, foto_url)').eq('publicacion', id).order('creado_en'));
     const nombreDe = (cid) => coms.find((c) => c.id === cid)?.perfiles?.nombre;
+    nombresComentarios = new Map(coms.map((c) => [c.id, c.perfiles?.nombre ?? '']));
     const meGusta = yo && p.me_gusta.some((g) => g.usuario === yo.id);
     const mapaApple = `https://maps.apple.com/?ll=${p.lat},${p.lon}&q=${encodeURIComponent(p.titulo)}`;
     app.innerHTML = `<button class="volver" onclick="ir('#')">← ${T('Comunidad', 'Community')}</button>
@@ -306,9 +312,9 @@ async function pantallaPub(id) {
             <div><b>${esc(c.perfiles?.nombre)}</b> <span class="meta">· ${hace(c.creado_en)}</span></div>
             ${c.respuesta_a && nombreDe(c.respuesta_a) ? `<div class="meta" style="color:var(--aqua)">↪ @${esc(nombreDe(c.respuesta_a))}</div>` : ''}
             <p style="white-space:pre-wrap">${esc(c.texto)}</p>
-            <div class="fila">${yo ? `<button class="volver" style="font-size:13px" onclick="responderA(${c.id}, '${esc(c.perfiles?.nombre).replace(/'/g, '')}')">${T('Responder', 'Reply')}</button>` : ''}
-              ${yo && c.autor === yo.id ? `<button class="volver" style="font-size:13px;color:var(--rojo)" onclick="borrarComentario(${c.id}, ${id})">${T('Borrar', 'Delete')}</button>` : ''}
-              ${yo && c.autor !== yo.id ? `<button class="volver" style="font-size:13px;color:var(--suave)" onclick="opciones({comentario:${c.id}, autor:'${c.autor}'}, ${id})">${T('Reportar', 'Report')}</button>` : ''}</div>
+            <div class="fila">${yo ? `<button class="volver" style="font-size:13px" onclick="responderA(${Number(c.id)})">${T('Responder', 'Reply')}</button>` : ''}
+              ${yo && c.autor === yo.id ? `<button class="volver" style="font-size:13px;color:var(--rojo)" onclick="borrarComentario(${Number(c.id)}, ${id})">${T('Borrar', 'Delete')}</button>` : ''}
+              ${yo && c.autor !== yo.id ? `<button class="volver" style="font-size:13px;color:var(--suave)" onclick="opciones({comentario:${Number(c.id)}, autor:'${esc(c.autor).replace(/[^0-9a-f-]/gi, '')}'}, ${id})">${T('Reportar', 'Report')}</button>` : ''}</div>
           </div></div>`).join('')}
         ${yo ? `<div class="tarjeta" style="display:grid;gap:10px">
           <div id="resp-a" class="meta" hidden></div>
@@ -349,7 +355,11 @@ async function pantallaPub(id) {
     };
   } catch (e) { fallo(e); }
 }
-function responderA(cid, nombre) {
+// El nombre de la persona NO se mete dentro del botón (un nombre con comillas podía ejecutar código en la
+// página de quien lo viera): el botón solo lleva el número del comentario y el nombre se busca aquí.
+let nombresComentarios = new Map();
+function responderA(cid) {
+  const nombre = nombresComentarios.get(cid) ?? '';
   respondiendo = cid;
   const r = document.getElementById('resp-a'); r.hidden = false;
   r.innerHTML = `${T('Respondiendo a', 'Replying to')} <b>${esc(nombre)}</b> · <a href="javascript:void 0" onclick="respondiendo=null;this.parentNode.hidden=true">${T('cancelar', 'cancel')}</a>`;
@@ -518,18 +528,18 @@ async function pantallaEnVivo() {
   let primera = true;
   async function refrescar() {
     try {
+      // (Antes aquí se escribía en un cuadro que en esta pantalla no existe: daba error y el mapa en vivo
+      // se quedaba SIEMPRE vacío. Los avisos de "ahora" se dibujan en la misma capa que los barcos, que se
+      // limpia en cada refresco para no repetir marcas.)
       const ahora = datos(await sb.from('publicaciones').select(CAMPOS).eq('tipo', 'ahora').gte('creado_en', new Date(Date.now() - 6 * 3600000).toISOString()).order('creado_en', { ascending: false }));
-    document.getElementById('ahora').innerHTML = `<h3 style="font-size:17px">⚡ ${T('Ahora en el agua (últimas 6 h)', 'On the water now (last 6 h)')}</h3>` +
-      (ahora.length ? ahora.map((a) => `<a href="#pub/${a.id}" style="text-decoration:none;color:#fff"><b>${estadoAhora(a.estado)}</b> · ${esc(a.titulo)} <span class="meta">· ${hace(a.creado_en)}</span></a>`).join('<br>')
-        : `<p class="meta">${T('Sin avisos ahora. Desde la app: Comunidad → ⚡ Avisar.', 'No reports right now. From the app: Community → ⚡ Report.')}</p>`);
-    ahora.forEach((a) => L.marker([a.lat, a.lon], { icon: L.divIcon({ className: '', html: `<div style="font-size:22px">${(AHORA[a.estado] || ['⚡'])[0]}</div>`, iconSize: [26, 26] }) }).addTo(mapa).bindPopup(`<b>${estadoAhora(a.estado)}</b><br>${esc(a.titulo)}<br>${hace(a.creado_en)}`));
-    const vivos = datos(await sb.from('en_vivo').select('usuario, lat, lon, rumbo, velocidad, camino, actualizado_en, perfiles(nombre, foto_url, barco_nombre)').eq('publico', true));
+      const vivos = datos(await sb.from('en_vivo').select('usuario, lat, lon, rumbo, velocidad, camino, actualizado_en, perfiles(nombre, foto_url, barco_nombre)').eq('publico', true));
       capa.clearLayers();
+      ahora.forEach((a) => L.marker([a.lat, a.lon], { icon: L.divIcon({ className: '', html: `<div style="font-size:22px">${datoAhora(a.estado)[0]}</div>`, iconSize: [26, 26] }) }).addTo(capa).bindPopup(`<b>${estadoAhora(a.estado)}</b><br>${esc(a.titulo)}<br>${hace(a.creado_en)}<br><a href="#pub/${a.id}">${T('Ver', 'Open')}</a>`));
       vivos.forEach((v) => {
         if (v.camino?.length > 1) L.polyline([[v.lat, v.lon], ...v.camino], { color: '#ff8a2a', weight: 3, opacity: 0.7, dashArray: '6 6' }).addTo(capa);
-        const nudos = v.velocidad != null ? (v.velocidad * 1.94384).toFixed(1) + ' kn · ' : '';
+        const nudos = v.velocidad != null ? (Number(v.velocidad) * 1.94384).toFixed(1) + ' kn · ' : '';
         L.marker([v.lat, v.lon], { icon: L.divIcon({ className: '', iconSize: [34, 34], iconAnchor: [17, 17],
-          html: `<div style="transform:rotate(${v.rumbo ?? 0}deg);font-size:28px;line-height:34px;text-align:center;color:#34d399;text-shadow:0 0 4px #000">➤</div>` }) })
+          html: `<div style="transform:rotate(${Number(v.rumbo) || 0}deg);font-size:28px;line-height:34px;text-align:center;color:#34d399;text-shadow:0 0 4px #000">➤</div>` }) })
           .addTo(capa).bindPopup(`<b>${esc(v.perfiles?.nombre)}</b>${v.perfiles?.barco_nombre ? '<br>⛴ ' + esc(v.perfiles.barco_nombre) : ''}<br>${nudos}${hace(v.actualizado_en)}<br><a href="#perfil/${v.usuario}">${T('Perfil', 'Profile')}</a>`);
       });
       document.getElementById('cuantos').textContent = T(`${vivos.length} barco(s) navegando`, `${vivos.length} boat(s) on the water`);
