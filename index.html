@@ -11,29 +11,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<!-- Colores, letras y medidas: estilo.css (común a toda la web). Aquí solo lo propio de la portada. -->
+<link rel="stylesheet" href="estilo.css">
 <style>
   /* Layout: una noche en Biscayne Bay. Una carta viva de fondo, una ruta naranja que baja por toda la
      página y 4 paradas del viaje (antes de salir → salida → en el agua → de vuelta). Un solo aspecto:
      noche náutica (diseño oscuro a propósito). */
-  :root {
-    --noche: #0b6fae;        /* fondo: azul de mar claro (Caribe) */
-    --tinta: #05325a;        /* texto oscuro sobre botones claros */
-    --casco: rgba(255, 255, 255, 0.10);   /* tarjetas de cristal */
-    --casco-2: rgba(255, 255, 255, 0.20);
-    --hilo: rgba(255, 255, 255, 0.32);  /* líneas finas */
-    --texto: #ffffff;
-    --niebla: #e3f3ff;       /* texto secundario */
-    --aqua: #7ff0e6;         /* acento de la app */
-    --ruta: #ff8a2a;         /* la ruta segura */
-    --rojo: #ff5a5f;
-    --amarillo: #fbbf24;
-    --verde: #34d399;
-    --azul: #3b82f6;
-    --f-display: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui, sans-serif;
-    --f-texto: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
-    --f-dato: "JetBrains Mono", ui-monospace, Menlo, monospace;
-    color-scheme: dark;
-  }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body { background: var(--noche); background-image: linear-gradient(180deg, #2bb8ea 0%, #189fdc 16%, #1089cb 42%, #0c78b8 72%, #0a68a3 100%); color: var(--texto); font: 17px/1.6 var(--f-texto); overflow-x: hidden; }

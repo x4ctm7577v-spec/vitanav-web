@@ -1,0 +1,133 @@
+/* NautikNav · estilos comunes de toda la web.
+   Un solo sitio para colores, letras y medidas: cambia un valor aquí y cambia en las 5 páginas.
+   Cada página enlaza este archivo ANTES de su propio <style>, que solo lleva lo que es suyo.
+
+   Hay dos ambientes:
+   - Portada (index.html): azul de mar claro, letras grandes. Es el de por defecto.
+   - Lectura (<html class="lectura">: comunidad, en vivo, soporte y privacidad): azul hondo, que da
+     más contraste para leer texto largo y para las tarjetas. */
+
+:root {
+  /* ── Colores ── */
+  --noche: #0b6fae;        /* fondo de la portada: azul de mar claro (Caribe) */
+  --fondo: #0a3a66;        /* fondo de las páginas de lectura: azul hondo */
+  --fondo-alto: #0f5c99;   /* arriba del degradado de las páginas de lectura */
+  --fondo-2: #0c4a80;      /* ventanas y globos del mapa sobre el azul hondo */
+  --tinta: #05325a;        /* texto oscuro sobre botones claros */
+  --casco: rgba(255, 255, 255, 0.10);   /* tarjetas de cristal */
+  --casco-2: rgba(255, 255, 255, 0.20); /* tarjeta al pasar el ratón, o destacada */
+  --hilo: rgba(255, 255, 255, 0.32);    /* líneas finas y bordes */
+  --texto: #ffffff;
+  --niebla: #e3f3ff;       /* texto secundario */
+  --aqua: #7ff0e6;         /* acento de la app: enlaces y botones principales */
+  --ruta: #ff8a2a;         /* naranja de la ruta segura */
+  --naranja: #f97316;
+  --rojo: #ff5a5f;
+  --rojo-hondo: #b91c1c;   /* fondo rojo con letra blanca encima (aviso de emergencia) */
+  --amarillo: #fbbf24;
+  --verde: #34d399;
+  --azul: #3b82f6;
+
+  /* ── Letras ── */
+  --f-display: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui, sans-serif; /* títulos */
+  --f-texto: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;             /* texto */
+  --f-dato: "JetBrains Mono", ui-monospace, Menlo, monospace;                    /* números y datos */
+
+  /* ── Esquinas ── */
+  --r-chico: 12px;     /* campos y fotos */
+  --r-medio: 14px;     /* cajas de aviso y preguntas */
+  --r-tarjeta: 20px;   /* tarjetas */
+  --r-pildora: 999px;  /* botones y etiquetas */
+
+  color-scheme: dark;
+}
+
+/* Ambiente de lectura: los mismos nombres, con los valores que piden un fondo más oscuro. */
+html.lectura {
+  --casco: rgba(255, 255, 255, 0.08);
+  --casco-2: rgba(255, 255, 255, 0.14);
+  --hilo: rgba(255, 255, 255, 0.22);
+  --niebla: #bcd6ee;
+}
+
+/* ── Base común ── */
+*, *::before, *::after { box-sizing: border-box; }
+a { color: var(--aqua); }
+/* Quien navega con el teclado siempre ve dónde está. */
+:focus-visible { outline: 3px solid var(--aqua); outline-offset: 3px; border-radius: 10px; }
+/* Quien pide menos movimiento en su teléfono o computadora no ve animaciones. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+/* (:where no suma "peso": lo que cada página ponga en su propio <style> manda sobre esto.) */
+:where(html.lectura) body {
+  margin: 0; min-height: 100vh; color: var(--texto); font: 16px/1.6 var(--f-texto);
+  background: linear-gradient(180deg, var(--fondo-alto) 0%, var(--fondo) 40%) fixed;
+}
+
+/* ── Páginas de texto (<html class="lectura documento">: soporte y privacidad) ── */
+.documento .cabecera {
+  position: sticky; top: 0; z-index: 10; padding-top: env(safe-area-inset-top, 0px);
+  background: rgba(8, 50, 90, 0.85); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--hilo);
+}
+.documento .cabecera .in, .documento .pie .in {
+  max-width: 760px; margin: 0 auto; padding: 10px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap;
+}
+.documento .marca {
+  display: inline-flex; align-items: center; gap: 10px; min-height: 44px;
+  font: 800 19px var(--f-display); letter-spacing: -0.03em; color: var(--texto); text-decoration: none;
+}
+.documento .marca b { color: var(--aqua); font-weight: 800; }
+.documento .logo-caja {
+  width: 36px; height: 36px; border-radius: 10px; background: #0a2748; display: grid; place-items: center; flex: none;
+  border: 1px solid rgba(127, 240, 230, 0.35);
+}
+.documento .idiomas { display: flex; gap: 4px; padding: 3px; border-radius: var(--r-pildora); background: var(--casco); margin: 0; }
+.documento .idiomas a {
+  display: inline-flex; align-items: center; min-height: 38px; padding: 0 14px; border-radius: var(--r-pildora);
+  font: 700 13px var(--f-texto); color: var(--texto); text-decoration: none; transition: background 0.15s;
+}
+.documento .idiomas a:hover { background: var(--casco-2); }
+
+.documento main { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+.documento section { scroll-margin-top: 80px; } /* al saltar a un idioma, la cabecera fija no tapa el título */
+.documento h1 { font: 800 clamp(28px, 6vw, 38px)/1.08 var(--f-display); letter-spacing: -0.035em; margin: 16px 0 8px; text-wrap: balance; }
+.documento h2 { font: 700 21px/1.25 var(--f-display); letter-spacing: -0.02em; margin: 36px 0 10px; text-wrap: balance; }
+.documento p { margin: 0 0 12px; }
+.documento ul { margin: 0 0 12px; padding-left: 1.25em; }
+.documento li { margin-bottom: 6px; }
+.documento a { text-underline-offset: 3px; overflow-wrap: anywhere; }
+.documento .suave { color: var(--niebla); }
+.documento hr { border: 0; border-top: 1px solid var(--hilo); margin: 48px 0; }
+
+/* Caja de contacto y preguntas que se abren */
+.documento .contacto { background: var(--casco); border: 1px solid var(--hilo); border-radius: var(--r-tarjeta); padding: 18px; margin-top: 18px; }
+.documento .contacto a { font-size: 20px; font-weight: 800; color: var(--texto); }
+.documento details { background: var(--casco); border: 1px solid var(--hilo); border-radius: var(--r-medio); padding: 4px 16px; margin: 10px 0; transition: background 0.15s; }
+.documento details:hover, .documento details[open] { background: var(--casco-2); }
+.documento summary { font-weight: 700; cursor: pointer; padding: 10px 0; min-height: 44px; }
+.documento details p { margin: 0 0 12px; color: var(--niebla); }
+.documento .emergencia { background: var(--rojo-hondo); border-radius: var(--r-medio); padding: 14px 18px; margin-top: 18px; font-weight: 700; }
+
+/* Tablas: en la computadora, tabla; en el teléfono, una tarjeta por fila (sin deslizar a los lados). */
+.documento table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 0 0 12px; }
+.documento td, .documento th { border: 1px solid var(--hilo); padding: 9px 10px; text-align: left; vertical-align: top; }
+.documento th { color: var(--aqua); font-weight: 700; }
+@media (max-width: 640px) {
+  .documento table, .documento tbody, .documento tr, .documento td { display: block; }
+  .documento tr:first-child { display: none; } /* la fila de títulos */
+  .documento tr { background: var(--casco); border: 1px solid var(--hilo); border-radius: var(--r-medio); padding: 12px 14px; margin-bottom: 10px; }
+  .documento td { border: 0; padding: 0; }
+  .documento td:first-child { font-weight: 700; margin-bottom: 4px; }
+  .documento td:nth-child(3) { color: var(--niebla); margin-top: 4px; }
+  .documento td:nth-child(3)::before { content: "Recibe: "; font-weight: 700; }
+  .documento [lang="en"] td:nth-child(3)::before { content: "Receives: "; }
+}
+
+/* Pie */
+.documento .pie { border-top: 1px solid var(--hilo); color: var(--niebla); font-size: 14px; padding-bottom: env(safe-area-inset-bottom, 0px); }
+.documento .pie .in { padding-block: 22px; }
+.documento .pie nav { display: flex; gap: 4px 18px; flex-wrap: wrap; }
+.documento .pie a { display: inline-flex; align-items: center; min-height: 44px; }

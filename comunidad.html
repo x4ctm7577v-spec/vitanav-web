@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" class="lectura">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -10,17 +10,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<!-- Colores, letras y fondo: estilo.css (común a toda la web). Aquí solo lo propio de esta página. -->
+<link rel="stylesheet" href="estilo.css">
 <style>
-  :root {
-    --fondo: #0a3a66; --fondo-2: #0c4a80; --tarjeta: rgba(255,255,255,0.08); --tarjeta-2: rgba(255,255,255,0.14);
-    --hilo: rgba(255,255,255,0.22); --texto: #fff; --suave: #bcd6ee; --aqua: #7ff0e6; --tinta: #05325a;
-    --rojo: #ff5a5f; --verde: #34d399; --naranja: #f97316;
-    --f-display: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui, sans-serif;
-    --f-texto: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
-    color-scheme: dark;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: linear-gradient(180deg, #0f5c99 0%, var(--fondo) 40%); background-attachment: fixed; color: var(--texto); font: 16px/1.55 var(--f-texto); min-height: 100vh; }
   body:not(.en) [lang="en"], body.en [lang="es"] { display: none !important; }
   a { color: var(--aqua); }
   h1, h2, h3 { font-family: var(--f-display); letter-spacing: -0.03em; margin: 0; }
@@ -32,20 +24,28 @@
   .marca b { color: var(--aqua); font-weight: 800; }
   .barra .esp { flex: 1; }
   .idiomas { display: flex; background: rgba(255,255,255,0.1); border-radius: 999px; padding: 3px; }
-  .idiomas button { border: 0; background: none; color: var(--suave); font: 700 13px var(--f-texto); padding: 5px 10px; border-radius: 999px; cursor: pointer; }
+  .idiomas button { border: 0; background: none; color: var(--niebla); font: 700 13px var(--f-texto); padding: 5px 10px; border-radius: 999px; cursor: pointer; }
   .idiomas button[aria-pressed="true"] { background: #fff; color: var(--tinta); }
   .yo { display: flex; align-items: center; gap: 8px; background: none; border: 0; color: #fff; cursor: pointer; font: 600 14px var(--f-texto); padding: 0; }
+  .yo span { max-width: 30vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Teléfonos estrechos: la barra tiene que caber entera. Antes el botón "Entrar" se salía por la derecha
+     en los iPhone de menos de 393 px de ancho (SE, mini, 12, 13) y toda la página se movía a los lados. */
+  .barra .in > * { min-width: 0; }
+  @media (max-width: 430px) {
+    .barra .in { gap: 8px; }
+    .barra .in > .meta, .yo span { display: none; } /* queda: marca, idioma y tu foto (o "Entrar") */
+  }
   main { max-width: 1180px; margin: 0 auto; padding: 20px 16px 80px; }
   .rejilla { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 20px; align-items: start; }
   @media (max-width: 900px) { .rejilla { grid-template-columns: 1fr; } .lateral { order: -1; } }
-  .tarjeta { background: var(--tarjeta); border: 1px solid var(--hilo); border-radius: 20px; padding: 16px; }
+  .tarjeta { background: var(--casco); border: 1px solid var(--hilo); border-radius: 20px; padding: 16px; }
   .lista { display: grid; gap: 12px; }
   .pub { cursor: pointer; display: grid; gap: 10px; transition: background .15s; }
-  .pub:hover { background: var(--tarjeta-2); }
+  .pub:hover { background: var(--casco-2); }
   .cab { display: flex; align-items: center; gap: 10px; }
   .cab .txt { flex: 1; min-width: 0; }
   .titulo { font-weight: 800; font-size: 17px; }
-  .meta { color: var(--suave); font-size: 13px; }
+  .meta { color: var(--niebla); font-size: 13px; }
   .tipo { display: inline-flex; align-items: center; gap: 4px; font: 700 12px var(--f-texto); padding: 3px 10px; border-radius: 999px; color: #fff; }
   .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--aqua); color: var(--tinta); display: grid; place-items: center; font-weight: 800; flex: none; }
   .avatar.g { width: 96px; height: 96px; font-size: 38px; }
@@ -59,23 +59,23 @@
   .chips { display: flex; gap: 8px; flex-wrap: wrap; }
   .chip { border: 1px solid var(--hilo); background: transparent; color: #fff; border-radius: 999px; padding: 7px 14px; font: 700 14px var(--f-texto); cursor: pointer; }
   .chip[aria-pressed="true"] { background: var(--aqua); color: var(--tinta); border-color: var(--aqua); }
-  label { display: grid; gap: 6px; font-weight: 600; font-size: 14px; color: var(--suave); }
+  label { display: grid; gap: 6px; font-weight: 600; font-size: 14px; color: var(--niebla); }
   input, textarea, select { font: 16px var(--f-texto); color: #fff; background: rgba(255,255,255,0.08); border: 1px solid var(--hilo); border-radius: 12px; padding: 11px 14px; width: 100%; }
   textarea { min-height: 90px; resize: vertical; }
   #mapa { height: 460px; border-radius: 20px; border: 1px solid var(--hilo); }
   #mapa-elegir { height: 300px; border-radius: 14px; border: 1px solid var(--hilo); }
   @media (max-width: 900px) { #mapa { height: 300px; } }
-  .seccion { font: 700 12px var(--f-texto); letter-spacing: .12em; color: var(--suave); text-transform: uppercase; margin: 8px 4px 0; }
+  .seccion { font: 700 12px var(--f-texto); letter-spacing: .12em; color: var(--niebla); text-transform: uppercase; margin: 8px 4px 0; }
   .comentario { display: flex; gap: 10px; }
   .comentario.resp { margin-left: 28px; }
-  .vacio { color: var(--suave); text-align: center; padding: 30px 10px; }
+  .vacio { color: var(--niebla); text-align: center; padding: 30px 10px; }
   .volver { background: none; border: 0; color: var(--aqua); font: 700 15px var(--f-texto); cursor: pointer; padding: 8px 0; }
   .aviso { background: rgba(255,90,95,0.15); border: 1px solid rgba(255,90,95,0.4); border-radius: 14px; padding: 10px 14px; }
   .vivo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--verde); box-shadow: 0 0 0 4px rgba(52,211,153,0.25); display: inline-block; }
-  .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #0c4a80; color: #fff; }
+  .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--fondo-2); color: #fff; }
   .leaflet-container a.leaflet-popup-close-button { color: #fff; }
   .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: grid; place-items: center; z-index: 2000; padding: 16px; }
-  .modal .tarjeta { background: #0c4a80; max-width: 460px; width: 100%; display: grid; gap: 12px; max-height: 90vh; overflow: auto; }
+  .modal .tarjeta { background: var(--fondo-2); max-width: 460px; width: 100%; display: grid; gap: 12px; max-height: 90vh; overflow: auto; }
 </style>
 </head>
 <body>
@@ -314,7 +314,7 @@ async function pantallaPub(id) {
             <p style="white-space:pre-wrap">${esc(c.texto)}</p>
             <div class="fila">${yo ? `<button class="volver" style="font-size:13px" onclick="responderA(${Number(c.id)})">${T('Responder', 'Reply')}</button>` : ''}
               ${yo && c.autor === yo.id ? `<button class="volver" style="font-size:13px;color:var(--rojo)" onclick="borrarComentario(${Number(c.id)}, ${id})">${T('Borrar', 'Delete')}</button>` : ''}
-              ${yo && c.autor !== yo.id ? `<button class="volver" style="font-size:13px;color:var(--suave)" onclick="opciones({comentario:${Number(c.id)}, autor:'${esc(c.autor).replace(/[^0-9a-f-]/gi, '')}'}, ${id})">${T('Reportar', 'Report')}</button>` : ''}</div>
+              ${yo && c.autor !== yo.id ? `<button class="volver" style="font-size:13px;color:var(--niebla)" onclick="opciones({comentario:${Number(c.id)}, autor:'${esc(c.autor).replace(/[^0-9a-f-]/gi, '')}'}, ${id})">${T('Reportar', 'Report')}</button>` : ''}</div>
           </div></div>`).join('')}
         ${yo ? `<div class="tarjeta" style="display:grid;gap:10px">
           <div id="resp-a" class="meta" hidden></div>
