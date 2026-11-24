@@ -9,16 +9,16 @@
 
 :root {
   /* ── Colores ── */
-  --noche: #0b6fae;        /* fondo de la portada: azul de mar claro (Caribe) */
-  --fondo: #0a3a66;        /* fondo de las páginas de lectura: azul hondo */
-  --fondo-alto: #0f5c99;   /* arriba del degradado de las páginas de lectura */
-  --fondo-2: #0c4a80;      /* ventanas y globos del mapa sobre el azul hondo */
-  --tinta: #05325a;        /* texto oscuro sobre botones claros */
+  --noche: #061a2b;        /* fondo de la portada: azul marino hondo (como la app) */
+  --fondo: #061a2b;        /* fondo de las páginas de lectura: azul marino hondo */
+  --fondo-alto: #0d3350;   /* arriba del degradado de las páginas de lectura */
+  --fondo-2: #0a2336;      /* ventanas y globos del mapa sobre el azul hondo */
+  --tinta: #04132a;        /* texto oscuro sobre botones aqua */
   --casco: rgba(255, 255, 255, 0.10);   /* tarjetas de cristal */
   --casco-2: rgba(255, 255, 255, 0.20); /* tarjeta al pasar el ratón, o destacada */
-  --hilo: rgba(255, 255, 255, 0.32);    /* líneas finas y bordes */
+  --hilo: rgba(255, 255, 255, 0.18);    /* líneas finas y bordes */
   --texto: #ffffff;
-  --niebla: #e3f3ff;       /* texto secundario */
+  --niebla: #d6ecfb;       /* texto secundario */
   --aqua: #7ff0e6;         /* acento de la app: enlaces y botones principales */
   --ruta: #ff8a2a;         /* naranja de la ruta segura */
   --naranja: #f97316;
@@ -46,8 +46,8 @@
 html.lectura {
   --casco: rgba(255, 255, 255, 0.08);
   --casco-2: rgba(255, 255, 255, 0.14);
-  --hilo: rgba(255, 255, 255, 0.22);
-  --niebla: #bcd6ee;
+  --hilo: rgba(255, 255, 255, 0.16);
+  --niebla: #c5dcee;
 }
 
 /* ── Base común ── */
@@ -68,7 +68,7 @@ a { color: var(--aqua); }
 /* ── Páginas de texto (<html class="lectura documento">: soporte y privacidad) ── */
 .documento .cabecera {
   position: sticky; top: 0; z-index: 10; padding-top: env(safe-area-inset-top, 0px);
-  background: rgba(8, 50, 90, 0.85); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  background: rgba(6, 26, 43, 0.86); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--hilo);
 }
 .documento .cabecera .in, .documento .pie .in {
