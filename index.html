@@ -19,7 +19,7 @@
      noche náutica (diseño oscuro a propósito). */
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
-  body { background: var(--noche); background-image: linear-gradient(180deg, #0d3350 0%, #0a2840 20%, #061a2b 55%, #04121f 100%); color: var(--texto); font: 17px/1.6 var(--f-texto); overflow-x: hidden; }
+  body { background: var(--noche); background-image: linear-gradient(180deg, #2bb8ea 0%, #189fdc 9%, #1089cb 20%, #0c6fae 34%, #0a5489 48%, #093b63 62%, #072840 76%, #051a2c 88%, #04121f 100%); color: var(--texto); font: 17px/1.6 var(--f-texto); overflow-x: hidden; }
   /* Olas animadas (espuma blanca que se mueve a distintas velocidades) */
   .olas { display: block; width: 100%; height: clamp(60px, 9vw, 130px); }
   .olas use { animation: ola 14s cubic-bezier(.55,.5,.45,.5) infinite; }
@@ -53,8 +53,8 @@
   p { margin: 0; }
   .dato { font-family: var(--f-dato); font-variant-numeric: tabular-nums; }
   .niebla { color: var(--niebla); }
-  .rotulo { font: 700 12px var(--f-dato); letter-spacing: 0.16em; text-transform: uppercase; color: var(--aqua); align-self: flex-start;
-    background: rgba(127,240,230,0.10); border: 1px solid rgba(127,240,230,0.4); padding: 6px 12px; border-radius: 999px; }
+  .rotulo { font: 700 12px var(--f-dato); letter-spacing: 0.16em; text-transform: uppercase; color: #fff; align-self: flex-start;
+    background: rgba(5, 50, 90, 0.32); border: 1px solid rgba(255,255,255,0.3); padding: 6px 12px; border-radius: 999px; }
   a { color: var(--aqua); }
   :focus-visible { outline: 3px solid var(--aqua); outline-offset: 3px; border-radius: 10px; }
   body:not(.en) [lang="en"], body.en [lang="es"] { display: none !important; }
@@ -62,7 +62,7 @@
   /* ── Barra ── */
   .barra { position: fixed; top: 0; left: 0; right: 0; z-index: 20; padding-top: env(safe-area-inset-top, 0px); }
   .barra .ancho { margin-top: 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px;
-    background: rgba(6, 26, 43, 0.72); backdrop-filter: blur(14px) saturate(150%); border: 1px solid var(--hilo);
+    background: rgba(8, 92, 150, 0.55); backdrop-filter: blur(14px) saturate(150%); border: 1px solid var(--hilo);
     border-radius: 999px; padding: 8px 8px 8px 16px; }
   .marca { display: flex; align-items: center; gap: 10px; font: 800 19px var(--f-display); letter-spacing: -0.03em; }
   .marca svg { flex: none; }
@@ -79,7 +79,7 @@
   #carta-viva { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
   .heroe::after { content: ""; position: absolute; inset: 0; z-index: -1;
     background: radial-gradient(60% 55% at 78% 45%, rgba(127,240,230,0.30), transparent 70%),
-                radial-gradient(55% 45% at 12% 0%, rgba(127,240,230,0.14), transparent 70%); }
+                radial-gradient(55% 45% at 12% 0%, rgba(255,236,170,0.45), transparent 70%); }
   .heroe .ancho { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 40px; align-items: center; padding-block: 140px 40px; }
   .heroe .olas { position: relative; z-index: 1; margin-top: -10px; }
   .heroe h1, .final h2 { text-shadow: 0 4px 24px rgba(4, 50, 90, 0.35); }
@@ -198,8 +198,8 @@
 
   /* Final */
   .final { position: relative; overflow: hidden; isolation: isolate;
-    background: radial-gradient(70% 60% at 85% 20%, rgba(127,240,230,0.25), transparent 70%), linear-gradient(180deg, #0d3350, #061a2b); }
-  footer { background: #061a2b; }
+    background: radial-gradient(70% 60% at 85% 20%, rgba(127,240,230,0.25), transparent 70%), linear-gradient(180deg, #062036, #04121f); }
+  footer { background: #04121f; }
   .final .ancho { padding-block: 120px; display: flex; flex-direction: column; align-items: flex-start; gap: 26px; }
   .final h2 { font-size: clamp(48px, 9vw, 120px); line-height: 0.9; font-weight: 800; }
   .final h2 .naranja { color: var(--ruta); }
@@ -359,7 +359,7 @@
   </div>
   </div>
   <!-- Mar vivo: olas y lanchas rápidas en 3D que flotan sobre ellas -->
-  <div class="mar-vivo" data-fondo="rgba(11,45,71,0.94)" data-lanchas="3" aria-hidden="true"></div>
+  <div class="mar-vivo" data-fondo="rgba(24,159,220,0.92)" data-lanchas="3" aria-hidden="true"></div>
 </section>
 
 
@@ -658,7 +658,7 @@
   </section>
 </main>
 
-<div class="mar-vivo" data-fondo="#0d3350" data-lanchas="1" style="margin-top: 0" aria-hidden="true"></div>
+<div class="mar-vivo" data-fondo="#062036" data-lanchas="1" style="margin-top: 0" aria-hidden="true"></div>
 <section class="final banda" id="descargar">
   <div class="brillos" aria-hidden="true"></div>
   <div class="ancho">
